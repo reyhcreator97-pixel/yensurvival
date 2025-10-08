@@ -1,0 +1,191 @@
+<?php
+namespace App\Controllers;
+
+use App\Models\TransaksiModel;
+use App\Models\KekayaanItemModel;
+
+class Transaksi extends BaseController
+{
+    protected TransaksiModel $trx;
+    protected KekayaanItemModel $items;
+
+    public function __construct()
+    {
+        $this->trx   = new TransaksiModel();
+        $this->items = new KekayaanItemModel();
+    }
+
+    private function uid(): int
+    {
+        return (int) user_id();
+    }
+
+    public function index(): string
+    {
+        $uid = $this->uid();
+
+        // --- Filter Harian / Bulanan / Tahunan ---
+        $mode   = $this->request->getGet('mode') ?? 'daily';
+        $date   = $this->request->getGet('date') ?? date('Y-m-d');
+        $month  = $this->request->getGet('month') ?? date('Y-m');
+        $year   = $this->request->getGet('year') ?? date('Y');
+
+        $builder = $this->trx->where('user_id', $uid);
+
+        if ($mode === 'daily') {
+            $builder->where('tanggal', $date);
+        } elseif ($mode === 'monthly') {
+            [$y, $m] = explode('-', $month);
+            $builder->where('YEAR(tanggal)', $y)->where('MONTH(tanggal)', $m);
+        } else { // yearly
+            $builder->where('YEAR(tanggal)', $year);
+        }
+
+        $list = $builder->orderBy('tanggal', 'DESC')->findAll();
+
+        // --- Hitung total transaksi masuk & keluar (buat analisis transaksi aja) ---
+        $totalIn  = $this->trx->getTotalPemasukan($uid);
+        $totalOut = $this->trx->getTotalPengeluaran($uid);
+
+        // --- Ambil total saldo real dari akun (uang) ---
+        $totalSaldoAkun = (float) ($this->items
+            ->where('user_id', $uid)
+            ->where('kategori', 'uang')
+            ->selectSum('saldo_terkini')
+            ->get()->getRow('saldo_terkini') ?? 0);
+
+        // --- Ambil daftar akun dari kekayaan awal (kategori uang) ---
+        $akun = $this->items->where([
+            'user_id'  => $uid,
+            'kategori' => 'uang'
+        ])->orderBy('id', 'ASC')->findAll();
+
+        $data = [
+            'title'     => 'Transaksi',
+            'mode'      => $mode,
+            'date'      => $date,
+            'month'     => $month,
+            'year'      => $year,
+            'list'      => $list,
+            'totalIn'   => $totalIn,
+            'totalOut'  => $totalOut,
+            'saldo'     => $totalSaldoAkun, // ✅ saldo real dari akun
+            'akun'      => $akun,
+        ];
+
+        return view('transaksi/index', $data);
+    }
+
+    // Tambah pemasukan/pengeluaran
+    public function store()
+    {
+        $uid   = $this->uid();
+        $jenis = $this->request->getPost('jenis'); // in|out
+        $tanggal   = $this->request->getPost('tanggal');
+        $sumber_id = (int) $this->request->getPost('sumber_id') ?: null;
+        $kategori  = trim((string) $this->request->getPost('kategori'));
+        $desc      = trim((string) $this->request->getPost('deskripsi'));
+        $jumlah    = (float) str_replace(',', '', (string) $this->request->getPost('jumlah'));
+
+        if (!in_array($jenis, ['in', 'out', 'pemasukan', 'pengeluaran'], true)) {
+            return redirect()->back()->with('error', 'Jenis transaksi tidak valid.');
+        }
+
+        $this->trx->insert([
+            'user_id'   => $uid,
+            'tanggal'   => $tanggal ?: date('Y-m-d'),
+            'jenis'     => $jenis,
+            'sumber_id' => $sumber_id,
+            'kategori'  => $kategori ?: null,
+            'deskripsi' => $desc ?: null,
+            'jumlah'    => $jumlah,
+        ]);
+
+        return redirect()->to('/transaksi')->with('message', 'Transaksi tersimpan.');
+    }
+
+    // Pindah dana antar akun (buat 2 baris: out dan in)
+    public function transfer()
+    {
+        $uid      = $this->uid();
+        $tanggal  = $this->request->getPost('tanggal') ?: date('Y-m-d');
+        $from     = (int) $this->request->getPost('from_id');
+        $to       = (int) $this->request->getPost('to_id');
+        $jumlah   = (float) str_replace(',', '', (string) $this->request->getPost('jumlah'));
+        $cat      = trim((string) $this->request->getPost('cat')) ?: 'Transfer';
+
+        if ($from === $to || $jumlah <= 0) {
+            return redirect()->back()->with('error', 'Akun tujuan harus berbeda & jumlah > 0.');
+        }
+
+        // out
+        $this->trx->insert([
+            'user_id'   => $uid,
+            'tanggal'   => $tanggal,
+            'jenis'     => 'out',
+            'sumber_id' => $from,
+            'tujuan_id' => $to,
+            'kategori'  => $cat,
+            'deskripsi' => 'Transfer keluar',
+            'jumlah'    => $jumlah,
+        ]);
+
+        // in
+        $this->trx->insert([
+            'user_id'   => $uid,
+            'tanggal'   => $tanggal,
+            'jenis'     => 'in',
+            'sumber_id' => $to,
+            'tujuan_id' => $from,
+            'kategori'  => $cat,
+            'deskripsi' => 'Transfer masuk',
+            'jumlah'    => $jumlah,
+        ]);
+
+        return redirect()->to('/transaksi')->with('message', 'Transfer berhasil.');
+    }
+
+    public function delete($id)
+    {
+        $uid = $this->uid();
+        $row = $this->trx->find((int) $id);
+        if ($row && (int) $row['user_id'] === $uid) {
+            $this->trx->delete($row['id']);
+            return redirect()->to('/transaksi')->with('message', 'Transaksi dihapus.');
+        }
+        return redirect()->back()->with('error', 'Data tidak ditemukan.');
+    }
+
+    public function addAkun()
+    {
+        $uid    = (int) user_id();
+        $nama   = trim((string) $this->request->getPost('deskripsi'));
+        $jumlah = (float) $this->request->getPost('jumlah');
+
+        if ($nama === '' || $jumlah < 0) {
+            return redirect()->back()->with('error', 'Nama akun dan saldo wajib diisi.');
+        }
+
+        $item = new \App\Models\KekayaanItemModel();
+        $item->insert([
+            'user_id'       => $uid,
+            'kategori'      => 'uang',
+            'deskripsi'     => $nama,
+            'jumlah'        => $jumlah,
+            'saldo_terkini' => $jumlah,
+        ]);
+
+        // auto generate transaksi modal awal
+        $this->trx->insert([
+            'user_id'   => $uid,
+            'tanggal'   => date('Y-m-d'),
+            'jenis'     => 'in',
+            'sumber_id' => $item->getInsertID(),
+            'kategori'  => 'Modal Awal',
+            'deskripsi' => 'Modal awal dari akun baru',
+            'jumlah'    => $jumlah,
+        ]);
+
+        return redirect()->to('/transaksi')->with('message', 'Akun baru berhasil ditambahkan.');
+    }
+}
