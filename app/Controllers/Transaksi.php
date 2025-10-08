@@ -43,9 +43,27 @@ class Transaksi extends BaseController
 
         $list = $builder->orderBy('tanggal', 'DESC')->findAll();
 
-        // --- Hitung total transaksi masuk & keluar (buat analisis transaksi aja) ---
-        $totalIn  = $this->trx->getTotalPemasukan($uid);
-        $totalOut = $this->trx->getTotalPengeluaran($uid);
+// --- Hitung total transaksi masuk & keluar (buat analisis transaksi aja) ---
+$totalIn = (float) $this->trx
+    ->where('user_id', $uid)
+    ->groupStart()
+        ->where('jenis', 'in')
+        ->orWhere('jenis', 'pemasukan')
+    ->groupEnd()
+    ->selectSum('jumlah')
+    ->get()
+    ->getRow('jumlah') ?? 0;
+
+$totalOut = (float) $this->trx
+    ->where('user_id', $uid)
+    ->groupStart()
+        ->where('jenis', 'out')
+        ->orWhere('jenis', 'pengeluaran')
+    ->groupEnd()
+    ->selectSum('jumlah')
+    ->get()
+    ->getRow('jumlah') ?? 0;
+
 
         // --- Ambil total saldo real dari akun (uang) ---
         $totalSaldoAkun = (float) ($this->items
@@ -148,44 +166,74 @@ class Transaksi extends BaseController
     public function delete($id)
     {
         $uid = $this->uid();
-        $row = $this->trx->find((int) $id);
-        if ($row && (int) $row['user_id'] === $uid) {
+        $row = $this->trx->find((int)$id);
+    
+        if ($row && (int)$row['user_id'] === $uid) {
+            // --- rollback saldo akun ---
+            $item = new \App\Models\KekayaanItemModel();
+    
+            if (!empty($row['sumber_id'])) {
+                $akun = $item->find($row['sumber_id']);
+                if ($akun) {
+                    $saldo = isset($akun['saldo_terkini']) && $akun['saldo_terkini'] !== null
+                            ? (float)$akun['saldo_terkini']
+                            : (float)$akun['jumlah'];
+    
+                    // Kembalikan saldo sesuai jenis transaksi
+                    if ($row['jenis'] === 'out') {
+                        $saldo += (float)$row['jumlah']; // transaksi keluar → balikin saldo
+                    } elseif ($row['jenis'] === 'in') {
+                        $saldo -= (float)$row['jumlah']; // transaksi masuk → kurangi lagi
+                    }
+    
+                    $item->update($akun['id'], ['saldo_terkini' => $saldo]);
+                }
+            }
+    
+            // --- hapus data transaksi ---
             $this->trx->delete($row['id']);
-            return redirect()->to('/transaksi')->with('message', 'Transaksi dihapus.');
+            return redirect()->to('/transaksi')->with('message', 'Transaksi dihapus & saldo diperbarui.');
         }
+    
         return redirect()->back()->with('error', 'Data tidak ditemukan.');
     }
+    
 
     public function addAkun()
     {
         $uid    = (int) user_id();
-        $nama   = trim((string) $this->request->getPost('deskripsi'));
+        $nama   = trim((string)$this->request->getPost('deskripsi'));
         $jumlah = (float) $this->request->getPost('jumlah');
-
+    
         if ($nama === '' || $jumlah < 0) {
-            return redirect()->back()->with('error', 'Nama akun dan saldo wajib diisi.');
+            return redirect()->back()->with('error', 'Nama akun dan saldo awal wajib diisi.');
         }
-
+    
+        // 1) buat akun dengan saldo_terkini = 0 dulu
         $item = new \App\Models\KekayaanItemModel();
         $item->insert([
             'user_id'       => $uid,
             'kategori'      => 'uang',
             'deskripsi'     => $nama,
-            'jumlah'        => $jumlah,
-            'saldo_terkini' => $jumlah,
+            'jumlah'        => $jumlah,     // hanya sebagai catatan setup awal
+            'saldo_terkini' => 0,           // <- penting! mulai dari 0
         ]);
-
-        // auto generate transaksi modal awal
-        $this->trx->insert([
-            'user_id'   => $uid,
-            'tanggal'   => date('Y-m-d'),
-            'jenis'     => 'in',
-            'sumber_id' => $item->getInsertID(),
-            'kategori'  => 'Modal Awal',
-            'deskripsi' => 'Modal awal dari akun baru',
-            'jumlah'    => $jumlah,
-        ]);
-
+        $akunId = $item->getInsertID();
+    
+        // 2) insert transaksi "Modal Awal" supaya hook menambah saldo_terkini jadi = $jumlah
+        if ($jumlah > 0) {
+            $this->trx->insert([
+                'user_id'   => $uid,
+                'tanggal'   => date('Y-m-d'),
+                'jenis'     => 'in',
+                'sumber_id' => $akunId,
+                'kategori'  => 'Modal Awal',
+                'deskripsi' => 'Saldo awal akun baru',
+                'jumlah'    => $jumlah,
+            ]);
+        }
+    
         return redirect()->to('/transaksi')->with('message', 'Akun baru berhasil ditambahkan.');
     }
+    
 }

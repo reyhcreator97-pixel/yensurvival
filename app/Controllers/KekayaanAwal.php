@@ -30,7 +30,7 @@ class KekayaanAwal extends BaseController
         $val = preg_replace('/[^\d\.\-]/', '', (string)$val);
         return (float)$val;
     }
-
+    
     public function index(): string
     {
         $uid = $this->currentUserId();

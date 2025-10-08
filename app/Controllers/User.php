@@ -41,7 +41,7 @@ class User extends BaseController
         $piutangModel = new \App\Models\PiutangModel();
     
         // --- Total dari kekayaan awal ---
-        $uangAwal      = $items->where(['user_id'=>$uid,'kategori'=>'uang'])->selectSum('jumlah')->first()['jumlah'] ?? 0;
+        // $uangAwal      = $items->where(['user_id'=>$uid,'kategori'=>'uang'])->selectSum('jumlah')->first()['jumlah'] ?? 0;
         $utangAwal     = $items->where(['user_id'=>$uid,'kategori'=>'utang'])->selectSum('jumlah')->first()['jumlah'] ?? 0;
         $piutangAwal   = $items->where(['user_id'=>$uid,'kategori'=>'piutang'])->selectSum('jumlah')->first()['jumlah'] ?? 0;
         $asetAwal      = $items->where(['user_id'=>$uid,'kategori'=>'aset'])->selectSum('jumlah')->first()['jumlah'] ?? 0;
@@ -57,6 +57,13 @@ class User extends BaseController
             ->where(['user_id'=>$uid, 'status'=>'belum'])
             ->selectSum('jumlah')
             ->first()['jumlah'] ?? 0;
+
+            //-- total uang
+            $uangAwal = (float) $items
+    ->where(['user_id' => $uid, 'kategori' => 'uang'])
+    ->selectSum('saldo_terkini')
+    ->get()->getRow('saldo_terkini') ?? 0;
+
     
         // --- Gabungkan kekayaan awal + baru ---
         $totals = [
