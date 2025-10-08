@@ -34,34 +34,78 @@ class User extends BaseController
         $kursView  = $kursCtrl->index();
         $kurs      = $kursCtrl->getKurs();
     
-        // --- Ambil model utama ---
-        $items    = new \App\Models\KekayaanItemModel();
-        $utangM   = new \App\Models\UtangModel();
-        $piutangM = new \App\Models\PiutangModel();
-    
-        // --- Ambil total uang dari semua akun aktif ---
-        $uangRows = $items->where(['user_id' => $uid, 'kategori' => 'uang'])->findAll();
-        $totalUang = 0;
-        foreach ($uangRows as $u) {
-            $totalUang += (float)($u['saldo_terkini'] ?? $u['jumlah']);
-        }
-    
-        // --- Total utang dan piutang (real-time, pakai sisa) ---
-        $utangRows = $utangM->where('user_id', $uid)->findAll();
-        $piutangRows = $piutangM->where('user_id', $uid)->findAll();
-    
-        $totalUtang = 0;
-        foreach ($utangRows as $r) {
-            $sisa = (float)$r['jumlah'] - (float)($r['dibayar'] ?? 0);
-            if ($sisa > 0) $totalUtang += $sisa;
-        }
-    
-        $totalPiutang = 0;
-        foreach ($piutangRows as $r) {
-            $sisa = (float)$r['jumlah'] - (float)($r['dibayar'] ?? 0);
-            if ($sisa > 0) $totalPiutang += $sisa;
-        }
-    
+        // === Totals (aman, tanpa ubah struktur lain) ===
+$uid      = (int) user_id();
+$items    = new \App\Models\KekayaanItemModel();
+$utangM   = new \App\Models\UtangModel();
+$piutangM = new \App\Models\PiutangModel();
+
+// Total Uang: pakai saldo_terkini kalau ada, fallback ke jumlah
+$rowSaldo = $items->selectSum('saldo_terkini', 's')
+                  ->where(['user_id' => $uid, 'kategori' => 'uang'])
+                  ->get()->getRow();
+$totalUang = (float)($rowSaldo->s ?? 0);
+
+if ($totalUang <= 0) {
+    $rowJumlah = $items->selectSum('jumlah', 'j')
+                       ->where(['user_id' => $uid, 'kategori' => 'uang'])
+                       ->get()->getRow();
+    $totalUang = (float)($rowJumlah->j ?? 0);
+}
+
+// // Total Aset & Investasi (kalau dipakai di card)
+// $rowAset = $items->selectSum('jumlah', 'j')
+//                  ->where(['user_id' => $uid, 'kategori' => 'aset'])
+//                  ->get()->getRow();
+// $totalAset = (float)($rowAset->j ?? 0);
+
+// $rowInv = $items->selectSum('jumlah', 'j')
+//                 ->where(['user_id' => $uid, 'kategori' => 'investasi'])
+//                 ->get()->getRow();
+// $totalInvestasi = (float)($rowInv->j ?? 0);
+
+// Total Utang = sisa semua utang (max 0)
+
+
+$totalUtang = 0.0;
+foreach ($utangM->where('user_id', $uid)->findAll() as $u) {
+    $jumlah  = (float)($u['jumlah']  ?? 0);
+    $dibayar = (float)($u['dibayar'] ?? 0);
+    $sisa    = $jumlah - $dibayar;
+    if ($sisa > 0) $totalUtang += $sisa;
+}
+// ✅ Tambahan untuk ambil data utang dari kekayaan_awal
+$utangAwal = $items->where([
+    'user_id'  => $uid,
+    'kategori' => 'utang'
+])->findAll();
+
+foreach ($utangAwal as $r) {
+    $jumlah = (float)($r['jumlah'] ?? 0);
+    $sisa   = $jumlah; // kekayaan awal belum punya kolom dibayar
+    if ($sisa > 0) $totalUtang += $sisa;
+}
+
+// Total Piutang = sisa semua piutang (max 0)
+$totalPiutang = 0.0;
+foreach ($piutangM->where('user_id', $uid)->findAll() as $p) {
+    $jumlah  = (float)($p['jumlah']  ?? 0);
+    $dibayar = (float)($p['dibayar'] ?? 0);
+    $sisa    = $jumlah - $dibayar;
+    if ($sisa > 0) $totalPiutang += $sisa;
+}
+// ✅ Tambahan untuk ambil data piutang dari kekayaan_awal
+$piutangAwal = $items->where([
+    'user_id'  => $uid,
+    'kategori' => 'piutang'
+])->findAll();
+
+foreach ($piutangAwal as $r) {
+    $jumlah = (float)($r['jumlah'] ?? 0);
+    $sisa   = $jumlah;
+    if ($sisa > 0) $totalPiutang += $sisa;
+} 
+
         // --- Aset & Investasi tetap dari kekayaan_awal ---
         $totalAset = (float)($items->where(['user_id' => $uid, 'kategori' => 'aset'])->selectSum('jumlah')->first()['jumlah'] ?? 0);
         $totalInvestasi = (float)($items->where(['user_id' => $uid, 'kategori' => 'investasi'])->selectSum('jumlah')->first()['jumlah'] ?? 0);

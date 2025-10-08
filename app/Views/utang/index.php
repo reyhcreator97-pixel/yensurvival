@@ -11,11 +11,34 @@
   </div>
 
   <?php if (session()->getFlashdata('message')): ?>
-    <div class="alert alert-success alert-dismissible fade show">
-      <?= esc(session('message')) ?>
-      <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <?= esc(session()->getFlashdata('message')) ?>
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
     </div>
-  <?php endif; ?>
+<?php endif; ?>
+
+<?php if (session()->getFlashdata('error')): ?>
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <?= esc(session()->getFlashdata('error')) ?>
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+<?php endif; ?>
+<script>
+    // Auto hide flash message after 3 seconds
+    setTimeout(() => {
+        const alerts = document.querySelectorAll('.alert');
+        alerts.forEach(alert => {
+            alert.classList.remove('show');
+            alert.classList.add('fade');
+            setTimeout(() => alert.remove(), 500); // delay remove biar fade jalan
+        });
+    }, 3000);
+</script>
+
   <?php if (session()->getFlashdata('error')): ?>
     <div class="alert alert-danger alert-dismissible fade show">
       <?= esc(session('error')) ?>
@@ -100,9 +123,13 @@
                 <td class="text-right"><?= yen2($sisa) ?></td>
                 <td><?= esc($akunNama) ?></td>
                 <td class="text-right">
+                <?php if (($r['jumlah'] - $r['dibayar']) > 0): ?>
                 <button onclick="openBayarModal(<?= $r['id'] ?>)" class="btn btn-success btn-sm">
                 Bayar
                 </button>
+                <?php else: ?>
+                  <span class="badge badge-success">LUNAS</span>
+                  <?php endif; ?>
                 </td>
               </tr>
 
