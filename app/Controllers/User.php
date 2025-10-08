@@ -46,37 +46,21 @@ class User extends BaseController
             $totalUang += (float)($u['saldo_terkini'] ?? $u['jumlah']);
         }
     
-      // --- Total utang (hanya yang belum lunas) ---
-$utangRows = $utangM->where('user_id', $uid)
-->groupStart()
-    ->where('status', 'belum')
-    ->orWhere('status IS NULL')
-->groupEnd()
-->findAll();
-
-$totalUtang = 0;
-foreach ($utangRows as $r) {
-$jumlah = (float)($r['jumlah'] ?? 0);
-$dibayar = (float)($r['dibayar'] ?? 0);
-$sisa = $jumlah - $dibayar;
-if ($sisa > 0) $totalUtang += $sisa;
-}
-
-// --- Total piutang (hanya yang belum lunas) ---
-$piutangRows = $piutangM->where('user_id', $uid)
-                        ->groupStart()
-                            ->where('status', 'belum')
-                            ->orWhere('status IS NULL')
-                        ->groupEnd()
-                        ->findAll();
-
-$totalPiutang = 0;
-foreach ($piutangRows as $r) {
-    $jumlah = (float)($r['jumlah'] ?? 0);
-    $dibayar = (float)($r['dibayar'] ?? 0);
-    $sisa = $jumlah - $dibayar;
-    if ($sisa > 0) $totalPiutang += $sisa;
-}
+        // --- Total utang dan piutang (real-time, pakai sisa) ---
+        $utangRows = $utangM->where('user_id', $uid)->findAll();
+        $piutangRows = $piutangM->where('user_id', $uid)->findAll();
+    
+        $totalUtang = 0;
+        foreach ($utangRows as $r) {
+            $sisa = (float)$r['jumlah'] - (float)($r['dibayar'] ?? 0);
+            if ($sisa > 0) $totalUtang += $sisa;
+        }
+    
+        $totalPiutang = 0;
+        foreach ($piutangRows as $r) {
+            $sisa = (float)$r['jumlah'] - (float)($r['dibayar'] ?? 0);
+            if ($sisa > 0) $totalPiutang += $sisa;
+        }
     
         // --- Aset & Investasi tetap dari kekayaan_awal ---
         $totalAset = (float)($items->where(['user_id' => $uid, 'kategori' => 'aset'])->selectSum('jumlah')->first()['jumlah'] ?? 0);
