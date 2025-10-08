@@ -16,7 +16,7 @@
             <li class="nav-item">
                 <a class="nav-link" href="<?= base_url('admin/dashboard'); ?>">
                     <i class="fas fa-fw fa-tachometer-alt"></i>
-                    <span>Dashboard</span></a>
+                    <span>Admin Pannel</span></a>
             </li>
  
             <!-- Divider -->
@@ -54,21 +54,9 @@
 
             <!-- Nav Item - Pages Collapse Menu -->
             <li class="nav-item">
-                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseTwo"
-                    aria-expanded="true" aria-controls="collapseTwo">
-                    <i class="fas fa-fw fa-cog"></i>
-                    <span>Starting</span>
-                </a>
-                <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
-                    <div class="bg-white py-2 collapse-inner rounded">
-                        <h6 class="collapse-header">Profil Kekayaan Awal:</h6>
-                        <a class="collapse-item" href="buttons.html">Kas & Tabungan</a>
-                        <a class="collapse-item" href="cards.html">Aset Setara Kas</a>
-                        <a class="collapse-item" href="cards.html">Aset Barang</a>
-                        <a class="collapse-item" href="cards.html">Piutang</a>
-                        <a class="collapse-item" href="cards.html">Utang</a>
-                    </div>
-                </div>
+                 <a class="nav-link" href="<?= base_url('kekayaan-awal'); ?>">
+                 <i class="fas fa-fw fa-tachometer-alt"></i>
+                 <span>Setting Kekayaan Awal</span></a>
             </li>
 
             <!-- Divider -->
@@ -81,18 +69,9 @@
 
             <!-- Nav Item - Pages Collapse Menu -->
             <li class="nav-item">
-                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseKeuangan"
-                    aria-expanded="true" aria-controls="collapseKeuangan">
-                    <i class="fas fa-money-check"></i>
-                    <span>Catatan Keuangan</span>
-                </a>
-                <div id="collapseKeuangan" class="collapse" aria-labelledby="headingKeuangan" data-parent="#accordionSidebar">
-                    <div class="bg-white py-2 collapse-inner rounded">
-                        <h6 class="collapse-header">Catatan Keuangan Kamu:</h6>
-                        <a class="collapse-item" href="buttons.html">Pendapatan</a>
-                        <a class="collapse-item" href="cards.html">Pengeluaran</a>
-                    </div>
-                </div>
+                 <a class="nav-link" href="<?= base_url('transaksi'); ?>">
+                 <i class="fas fa-money-check"></i>
+                 <span>Catatan Keuangan</span></a>
             </li>
 
             <!-- Divider -->

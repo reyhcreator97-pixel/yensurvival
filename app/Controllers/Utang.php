@@ -1,20 +1,18 @@
 <?php
-
 namespace App\Controllers;
 
 use App\Models\UtangModel;
-use App\Models\TransaksiModel;
 use App\Models\KekayaanItemModel;
-use CodeIgniter\Controller;
+use App\Models\TransaksiModel;
 
-class Utang extends Controller
+class Utang extends BaseController
 {
-    protected $utang;
-    protected $trx;
+    protected $utang, $akun, $trx;
 
     public function __construct()
     {
         $this->utang = new UtangModel();
+        $this->akun  = new KekayaanItemModel();
         $this->trx   = new TransaksiModel();
     }
 
@@ -26,109 +24,170 @@ class Utang extends Controller
     public function index(): string
     {
         $uid = $this->uid();
-
-        // 🔹 Ambil data dari tabel utang
-        $listDb = $this->utang->where('user_id', $uid)->orderBy('tanggal', 'DESC')->findAll();
-
-        // 🔹 Ambil juga dari kekayaan_awal (kategori utang)
-        $items = new KekayaanItemModel();
-        $listKekayaan = $items->where([
-            'user_id'  => $uid,
-            'kategori' => 'utang'
-        ])->findAll();
-
-        // 🔹 Tandai data awal
-        foreach ($listKekayaan as &$i) {
-            $i['asal'] = 'awal';
-            $i['status'] = 'belum';
-            $i['tanggal'] = $i['created_at'] ?? date('Y-m-d');
+    
+        // Ambil data dari tabel utang
+        $listUtang = $this->utang->where('user_id', $uid)->findAll();
+    
+        // Ambil juga dari kekayaan awal
+        $fromKekayaan = $this->akun
+            ->where(['user_id' => $uid, 'kategori' => 'utang'])
+            ->findAll();
+    
+        // Gabungkan tanpa duplikasi nama
+        $final = $listUtang;
+        foreach ($fromKekayaan as $k) {
+            $exists = false;
+            foreach ($listUtang as $u) {
+                if (trim(strtolower($u['nama'])) === trim(strtolower($k['deskripsi']))) {
+                    $exists = true;
+                    break;
+                }
+            }
+            if (!$exists) {
+                $final[] = [
+                    'id'         => 0,
+                    'user_id'    => $uid,
+                    'nama'       => $k['deskripsi'],
+                    'jumlah'     => (float)$k['jumlah'],
+                    'dibayar'    => 0,
+                    'akun_id'    => null,
+                    'keterangan' => 'Kekayaan Awal',
+                ];
+            }
         }
-
-        // 🔹 Gabungkan data
-        $list = array_merge($listDb, $listKekayaan);
-
-        // 🔹 Hitung total
-        $total = ['utang' => 0, 'lunas' => 0];
-        foreach ($list as $r) {
-            $status = $r['status'] ?? 'belum';
-            $jumlah = (float)($r['jumlah'] ?? 0);
-
-            if ($status === 'belum') $total['utang'] += $jumlah;
-            if ($status === 'lunas') $total['lunas'] += $jumlah;
+    
+        // Hitung total
+        $totalUtang = 0;
+        $totalBayar = 0;
+        foreach ($final as $r) {
+            $totalUtang += (float)($r['jumlah'] ?? 0);
+            $totalBayar += (float)($r['dibayar'] ?? 0);
         }
+        $sisaUtang = max(0, $totalUtang - $totalBayar);
+    
+        // Ambil akun uang
+        $akun = $this->akun
+            ->where(['user_id' => $uid, 'kategori' => 'uang'])
+            ->orderBy('id', 'ASC')
+            ->findAll();
 
-        // 🔹 Sisa gak boleh minus
-        $sisa = max(0, $total['utang'] - $total['lunas']);
-
-        return view('utang/index', [
-            'title' => 'Catatan Utang',
-            'list'  => $list,
-            'total' => $total,
-            'sisa'  => $sisa,
-        ]);
+    
+        $data = [
+            'title'      => 'Catatan Utang',
+            'list'       => $final,
+            'akun'       => $akun,
+            'totalUtang' => $totalUtang,
+            'totalBayar' => $totalBayar,
+            'sisaUtang'  => $sisaUtang,
+        ];
+    
+        return view('utang/index', $data);
     }
+    
 
     public function store()
     {
-        $uid = $this->uid();
-        $tanggal = $this->request->getPost('tanggal');
-        $nama = $this->request->getPost('nama');
-        $keterangan = $this->request->getPost('keterangan');
-        $jumlah = (float) $this->request->getPost('jumlah');
+        $uid       = $this->uid();
+        $nama      = trim($this->request->getPost('nama'));
+        $jumlah    = (float) $this->request->getPost('jumlah');
+        $akun_id   = (int) $this->request->getPost('akun_id');
+        $desc      = trim($this->request->getPost('keterangan'));
 
+        if ($jumlah <= 0) {
+            return redirect()->back()->with('error', 'Jumlah harus lebih besar dari 0.');
+        }
+
+        // Simpan ke tabel utang
         $this->utang->insert([
-            'user_id' => $uid,
-            'tanggal' => $tanggal,
-            'nama' => $nama,
-            'keterangan' => $keterangan,
-            'jumlah' => $jumlah,
-            'status' => 'belum'
+            'user_id'    => $uid,
+            'nama'       => $nama,
+            'jumlah'     => $jumlah,
+            'dibayar'    => 0,
+            'akun_id'    => $akun_id,
+            'keterangan' => $desc ?: 'Utang baru',
         ]);
 
-        // Catat ke transaksi (utang = pemasukan)
+        // Buat transaksi otomatis (pemasukan)
         $this->trx->insert([
-            'user_id'  => $uid,
-            'tanggal'  => $tanggal,
-            'jenis'    => 'in',
-            'kategori' => 'Utang',
-            'deskripsi'=> "Pinjam uang dari {$nama}",
-            'jumlah'   => $jumlah
+            'user_id'   => $uid,
+            'tanggal'   => date('Y-m-d'),
+            'jenis'     => 'in',
+            'sumber_id' => $akun_id,
+            'kategori'  => 'Utang',
+            'deskripsi' => 'Penerimaan uang utang dari ' . $nama,
+            'jumlah'    => $jumlah,
         ]);
 
-        return redirect()->to('/utang')->with('message', 'Utang berhasil ditambahkan.');
+        return redirect()->to('/utang')->with('message', 'Utang baru ditambahkan.');
     }
 
-    public function lunas($id)
+    public function bayar($id)
     {
         $uid = $this->uid();
         $utang = $this->utang->find($id);
         if (!$utang || $utang['user_id'] != $uid) {
-            return redirect()->back()->with('error', 'Data tidak ditemukan.');
+            return redirect()->back()->with('error', 'Data utang tidak ditemukan.');
         }
 
-        $this->utang->update($id, ['status' => 'lunas']);
+        $jumlahBayar = (float) $this->request->getPost('jumlah_bayar');
+        $akunBayar   = (int) $this->request->getPost('akun_bayar');
 
-        // Catat ke transaksi (bayar utang = pengeluaran)
+        // Update total dibayar
+        $baru = $utang['dibayar'] + $jumlahBayar;
+        $this->utang->update($id, ['dibayar' => $baru]);
+
+        // Buat transaksi otomatis (pengeluaran)
         $this->trx->insert([
-            'user_id'  => $uid,
-            'tanggal'  => date('Y-m-d'),
-            'jenis'    => 'out',
-            'kategori' => 'Pembayaran Utang',
-            'deskripsi'=> "Bayar utang ke {$utang['nama']}",
-            'jumlah'   => $utang['jumlah']
+            'user_id'   => $uid,
+            'tanggal'   => date('Y-m-d'),
+            'jenis'     => 'out',
+            'sumber_id' => $akunBayar,
+            'kategori'  => 'Pembayaran Utang',
+            'deskripsi' => 'Pembayaran utang kepada ' . $utang['nama'],
+            'jumlah'    => $jumlahBayar,
         ]);
 
-        return redirect()->to('/utang')->with('message', 'Utang ditandai lunas.');
+        return redirect()->to('/utang')->with('message', 'Pembayaran utang berhasil.');
     }
 
-    public function delete($id)
-    {
-        $uid = $this->uid();
-        $row = $this->utang->find($id);
-        if ($row && $row['user_id'] == $uid) {
-            $this->utang->delete($id);
-            return redirect()->to('/utang')->with('message', 'Utang dihapus.');
-        }
-        return redirect()->back()->with('error', 'Data tidak ditemukan.');
+    public function storePembayaran()
+{
+    $uid = user_id();
+    $utangId = (int)$this->request->getPost('utang_id');
+    $akunId  = (int)$this->request->getPost('akun_id');
+    $jumlah  = (float)$this->request->getPost('jumlah');
+
+    if (!$utangId || !$akunId || $jumlah <= 0) {
+        return redirect()->back()->with('error', 'Data pembayaran tidak lengkap.');
     }
+
+
+    // --- 1. Update data utang (tambah jumlah dibayar)
+    $utangModel = new \App\Models\UtangModel();
+    $utang = $utangModel->find($utangId);
+    if ($utang) {
+        $dibayar = ($utang['dibayar'] ?? 0) + $jumlah;
+        $status  = $dibayar >= $utang['jumlah'] ? 'lunas' : 'belum';
+        $utangModel->update($utangId, [
+            'dibayar' => $dibayar,
+            'status'  => $status,
+            'akun_id' => $akunId,
+        ]);
+    }
+
+    // --- 2. Catat ke transaksi (biar dashboard & saldo sinkron)
+    $trx = new \App\Models\TransaksiModel();
+    $trx->insert([
+        'user_id'   => $uid,
+        'tanggal'   => date('Y-m-d'),
+        'jenis'     => 'out',
+        'sumber_id' => $akunId,
+        'kategori'  => 'Bayar Utang',
+        'deskripsi' => 'Pembayaran utang ID '.$utangId,
+        'jumlah'    => $jumlah,
+    ]);
+
+    return redirect()->to('/utang')->with('message', 'Pembayaran utang berhasil disimpan.');
+}
+
 }

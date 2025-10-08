@@ -27,99 +27,109 @@ class User extends BaseController
     }
     public function dashboard(): string
     {
+        $uid = user_id();
+    
         // --- Ambil kurs DCOM ---
         $kursCtrl  = new \App\Controllers\KursDcom();
         $kursView  = $kursCtrl->index();
         $kurs      = $kursCtrl->getKurs();
     
-        // --- Ambil ID user ---
-        $uid = user_id();
+        // --- Ambil model utama ---
+        $items    = new \App\Models\KekayaanItemModel();
+        $utangM   = new \App\Models\UtangModel();
+        $piutangM = new \App\Models\PiutangModel();
     
-        // --- Model utama ---
-        $items        = new \App\Models\KekayaanItemModel();
-        $utangModel   = new \App\Models\UtangModel();
-        $piutangModel = new \App\Models\PiutangModel();
+        // --- Ambil total uang dari semua akun aktif ---
+        $uangRows = $items->where(['user_id' => $uid, 'kategori' => 'uang'])->findAll();
+        $totalUang = 0;
+        foreach ($uangRows as $u) {
+            $totalUang += (float)($u['saldo_terkini'] ?? $u['jumlah']);
+        }
     
-        // --- Total dari kekayaan awal ---
-        // $uangAwal      = $items->where(['user_id'=>$uid,'kategori'=>'uang'])->selectSum('jumlah')->first()['jumlah'] ?? 0;
-        $utangAwal     = $items->where(['user_id'=>$uid,'kategori'=>'utang'])->selectSum('jumlah')->first()['jumlah'] ?? 0;
-        $piutangAwal   = $items->where(['user_id'=>$uid,'kategori'=>'piutang'])->selectSum('jumlah')->first()['jumlah'] ?? 0;
-        $asetAwal      = $items->where(['user_id'=>$uid,'kategori'=>'aset'])->selectSum('jumlah')->first()['jumlah'] ?? 0;
-        $investAwal    = $items->where(['user_id'=>$uid,'kategori'=>'investasi'])->selectSum('jumlah')->first()['jumlah'] ?? 0;
-    
-        // --- Total dari tabel utang/piutang aktif (belum lunas aja) ---
-        $utangBaru = $utangModel
-            ->where(['user_id'=>$uid, 'status'=>'belum'])
-            ->selectSum('jumlah')
-            ->first()['jumlah'] ?? 0;
-    
-        $piutangBaru = $piutangModel
-            ->where(['user_id'=>$uid, 'status'=>'belum'])
-            ->selectSum('jumlah')
-            ->first()['jumlah'] ?? 0;
+      // --- Total utang (hanya yang belum lunas) ---
+$utangRows = $utangM->where('user_id', $uid)
+->groupStart()
+    ->where('status', 'belum')
+    ->orWhere('status IS NULL')
+->groupEnd()
+->findAll();
 
-            //-- total uang
-            $uangAwal = (float) $items
-    ->where(['user_id' => $uid, 'kategori' => 'uang'])
-    ->selectSum('saldo_terkini')
-    ->get()->getRow('saldo_terkini') ?? 0;
+$totalUtang = 0;
+foreach ($utangRows as $r) {
+$jumlah = (float)($r['jumlah'] ?? 0);
+$dibayar = (float)($r['dibayar'] ?? 0);
+$sisa = $jumlah - $dibayar;
+if ($sisa > 0) $totalUtang += $sisa;
+}
 
+// --- Total piutang (hanya yang belum lunas) ---
+$piutangRows = $piutangM->where('user_id', $uid)
+                        ->groupStart()
+                            ->where('status', 'belum')
+                            ->orWhere('status IS NULL')
+                        ->groupEnd()
+                        ->findAll();
+
+$totalPiutang = 0;
+foreach ($piutangRows as $r) {
+    $jumlah = (float)($r['jumlah'] ?? 0);
+    $dibayar = (float)($r['dibayar'] ?? 0);
+    $sisa = $jumlah - $dibayar;
+    if ($sisa > 0) $totalPiutang += $sisa;
+}
     
-        // --- Gabungkan kekayaan awal + baru ---
-        $totals = [
-            'uang'      => $uangAwal,
-            'utang'     => $utangAwal + $utangBaru,
-            'piutang'   => $piutangAwal + $piutangBaru,
-            'aset'      => $asetAwal,
-            'investasi' => $investAwal,
-        ];
+        // --- Aset & Investasi tetap dari kekayaan_awal ---
+        $totalAset = (float)($items->where(['user_id' => $uid, 'kategori' => 'aset'])->selectSum('jumlah')->first()['jumlah'] ?? 0);
+        $totalInvestasi = (float)($items->where(['user_id' => $uid, 'kategori' => 'investasi'])->selectSum('jumlah')->first()['jumlah'] ?? 0);
     
         // --- Konversi ke IDR ---
-        $totalUangIdr      = $kurs > 0 ? $totals['uang'] * $kurs : 0;
-        $totalUtangIdr     = $kurs > 0 ? $totals['utang'] * $kurs : 0;
-        $totalPiutangIdr   = $kurs > 0 ? $totals['piutang'] * $kurs : 0;
-        $totalAsetIdr      = $kurs > 0 ? $totals['aset'] * $kurs : 0;
-        $totalInvestasiIdr = $kurs > 0 ? $totals['investasi'] * $kurs : 0;
-
-         // --- Status Utang Berdasarkan Total Uang ---
-         if ($totals['utang'] <= 0) {
-            $statusUtang = ' ( Bebas Utang )';
-            } elseif ($totals['uang'] > $totals['utang']) {
-            $statusUtang = ' ( Bisa Lunas )';
-            } else {
-            $statusUtang = ' ( Belum Bisa Lunas )';
-            }
-
+        $totalUangIdr      = $kurs > 0 ? $totalUang * $kurs : 0;
+        $totalUtangIdr     = $kurs > 0 ? $totalUtang * $kurs : 0;
+        $totalPiutangIdr   = $kurs > 0 ? $totalPiutang * $kurs : 0;
+        $totalAsetIdr      = $kurs > 0 ? $totalAset * $kurs : 0;
+        $totalInvestasiIdr = $kurs > 0 ? $totalInvestasi * $kurs : 0;
     
-        // --- Harga emas IndoGold ---
+        // --- Ambil harga emas IndoGold ---
         $indogold = new \App\Controllers\EmasIndogold();
         $json     = $indogold->getHarga1Gram();
     
-        // --- Data ke view ---
+        // --- Logic tambahan: status utang ---
+        if ($totalUtang <= 0) {
+            $statusUtang = 'Bebas Utang 🎉';
+        } elseif ($totalUang >= $totalUtang) {
+            $statusUtang = 'Bisa Lunas 💪';
+        } else {
+            $statusUtang = 'Belum Bisa Lunas 😅';
+        }
+    
+        // --- Kirim ke view ---
         $data = [
-            'title'             => 'Dashboard',
-            'hargalog'          => $json,
-            'kursDcom'          => $kursView,
-            'kurs'              => $kurs,
+            'title' => 'Dashboard',
+            'hargalog' => $json,
+            'kursDcom' => $kursView,
+            'kurs' => $kurs,
     
-            // Total per kategori (YEN)
-            'totalUang'         => $totals['uang'],
-            'totalUtang'        => $totals['utang'],
-            'totalPiutang'      => $totals['piutang'],
-            'totalAset'         => $totals['aset'],
-            'totalInvestasi'    => $totals['investasi'],
+            // Total YEN
+            'totalUang'      => $totalUang,
+            'totalUtang'     => $totalUtang,
+            'totalPiutang'   => $totalPiutang,
+            'totalAset'      => $totalAset,
+            'totalInvestasi' => $totalInvestasi,
     
-            // Total dalam IDR
+            // Total IDR
             'totalUangIdr'      => $totalUangIdr,
             'totalUtangIdr'     => $totalUtangIdr,
             'totalPiutangIdr'   => $totalPiutangIdr,
             'totalAsetIdr'      => $totalAsetIdr,
-            'totalInvestasiIdr' => $totalInvestasiIdr,   
+            'totalInvestasiIdr' => $totalInvestasiIdr,
+    
+            // Status tambahan
             'statusUtang' => $statusUtang,
         ];
     
         return view('user/dashboard', $data);
     }
+    
     
     
 
