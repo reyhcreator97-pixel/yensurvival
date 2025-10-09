@@ -45,6 +45,15 @@ $routes->group('piutang', ['filter' => 'login'], static function($routes) {
     $routes->post('storePembayaran', 'Piutang::storePembayaran'); // ✅ tambahkan ini
 });
 
+// --- INVESTASI
+$routes->group('investasi', ['filter' => 'login'], static function($routes) {
+    $routes->get('/', 'Investasi::index');
+    $routes->post('store', 'Investasi::store'); // tambah investasi baru
+    $routes->post('jual/(:num)', 'Investasi::jual/$1'); // jual investasi
+    $routes->get('delete/(:num)', 'Investasi::delete/$1');
+    $routes->post('updateNilai', 'Investasi::updateNilai');
+
+});
 
 
 $routes->group('', static function($routes) {
