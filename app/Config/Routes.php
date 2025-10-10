@@ -11,21 +11,25 @@ $routes->get('/user/dashboard', 'User::dashboard');
 $routes->get('/register', 'Home::register');
 $routes->get('/user', 'Home::user');
 
-// $routes->group('', ['filter' => 'login'], static function($routes) {
-//     // UTANG
-//     $routes->get ('utang',           'Utang::index');
-//     $routes->post('utang/store',     'Utang::store');
-//     $routes->get ('utang/lunas/(:num)','Utang::lunas/$1');
-//     $routes->post('utang/delete/(:num)','Utang::delete/$1');
 
-//     // PIUTANG
-//     $routes->get ('piutang',             'Piutang::index');
-//     $routes->post('piutang/store',       'Piutang::store');
-//     $routes->get ('piutang/lunas/(:num)','Piutang::lunas/$1');
-//     $routes->post('piutang/delete/(:num)','Piutang::delete/$1');
+// =========================
+// ROUTES: ASET
+// =========================
+$routes->group('aset', ['filter' => 'login'], function($routes) {
+    
+    // Halaman utama aset (daftar aset)
+    $routes->get('/', 'Aset::index');
 
+    // Tambah aset baru
+    $routes->post('store', 'Aset::store');
 
-// });
+    // Update nilai aset (jual / apresiasi / penyusutan)
+    $routes->post('update/(:num)', 'Aset::update/$1');
+
+    // Hapus aset
+    $routes->post('delete/(:num)', 'Aset::delete/$1');
+});
+
 
 // --- UTANG
 $routes->group('utang', ['filter' => 'login'], static function($routes) {
@@ -45,15 +49,19 @@ $routes->group('piutang', ['filter' => 'login'], static function($routes) {
     $routes->post('storePembayaran', 'Piutang::storePembayaran'); // ✅ tambahkan ini
 });
 
-// --- INVESTASI
-$routes->group('investasi', ['filter' => 'login'], static function($routes) {
-    $routes->get('/', 'Investasi::index');
-    $routes->post('store', 'Investasi::store'); // tambah investasi baru
-    $routes->post('jual/(:num)', 'Investasi::jual/$1'); // jual investasi
-    $routes->get('delete/(:num)', 'Investasi::delete/$1');
-    $routes->post('updateNilai', 'Investasi::updateNilai');
+// =============================
+// 📈 ROUTES: INVESTASI
+// =============================
+$routes->group('investasi', ['filter' => 'login'], function($routes) {
+    $routes->get('/', 'Investasi::index');                   // Halaman utama
+    $routes->post('store', 'Investasi::store');              // Tambah investasi baru
+    $routes->post('updateNilai', 'Investasi::updateNilai');  // Update nilai sekarang
+    $routes->post('jual', 'Investasi::jual');                // Jual investasi
+    $routes->post('delete/(:num)', 'Investasi::delete/$1');   // Hapus investasi
+    $routes->get('total', 'Investasi::getTotalInvestasi');
 
 });
+
 
 
 $routes->group('', static function($routes) {
