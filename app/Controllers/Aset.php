@@ -2,161 +2,204 @@
 
 namespace App\Controllers;
 
+use App\Models\AsetModel;
 use App\Models\KekayaanItemModel;
 use App\Models\TransaksiModel;
 
 class Aset extends BaseController
 {
-    protected $items;
+    protected $aset;
+    protected $kekayaan;
     protected $trx;
 
     public function __construct()
     {
-        $this->items = new KekayaanItemModel();
-        $this->trx   = new TransaksiModel();
-        helper(['form']);
+        $this->aset     = new AsetModel();
+        $this->kekayaan = new KekayaanItemModel();
+        $this->trx      = new TransaksiModel();
     }
 
-    private function uid(): int
+    private function uid()
     {
-        return (int) user_id();
+        return (int) user_id(); // konsisten dengan halaman lain
     }
 
-    // =========================
-    // INDEX / LIST ASET
-    // =========================
-    public function index(): string
+    // =======================
+    // 📦 HALAMAN UTAMA
+    // =======================
+    public function index()
     {
-        $uid    = $this->uid();
-        $status = $this->request->getGet('status');
+        $uid  = $this->uid();
+        $list = $this->aset->getAllByUser($uid);
 
-        // ambil data aset (termasuk dari kekayaan awal)
-        $query = $this->items->where(['user_id' => $uid, 'kategori' => 'aset']);
+        // Ambil akun uang dari kekayaan awal
+        $akun = $this->kekayaan->where([
+            'user_id'  => $uid,
+            'kategori' => 'uang'
+        ])->findAll();
 
-        if ($status === 'aktif') {
-            $query->groupStart()->where('saldo_terkini >', 0)->orWhere('saldo_terkini', null)->groupEnd();
-        } elseif ($status === 'terjual') {
-            $query->where('saldo_terkini <=', 0);
+        // Jika data dari kekayaan awal belum tergenerate ke aset
+        $awal = $this->kekayaan->where([
+            'user_id'  => $uid,
+            'kategori' => 'aset'
+        ])->findAll();
+
+        // Sinkronisasi data kekayaan awal ke tabel aset
+        foreach ($awal as $r) {
+            $exists = $this->aset
+                ->where('user_id', $uid)
+                ->where('nama', $r['deskripsi'])
+                // ->where('kategori', 'aset')
+                ->first();
+
+            if (!$exists) {
+                $this->aset->insert([
+                    'user_id'        => $uid,
+                    'tanggal'        => date('Y-m-d'),
+                    'nama'           => $r['deskripsi'],
+                    'akun_id'        => null,
+                    'jumlah'         => $r['jumlah'],
+                    'nilai_sekarang'  => $r['jumlah'], // ✅ ganti nilai_sekarang jadi saldo_terkini
+                    'deskripsi'      => 'Data dari Kekayaan Awal',
+                    'status'         => 'aktif',
+                    // 'kategori'       => 'aset'
+                ]);
+            }
         }
 
-        $list = $query->orderBy('id', 'DESC')->findAll();
 
-        // total aset hanya hitung yang masih aktif
-        $totalAset = 0;
-        foreach ($list as $a) {
-            $nilai = $a['saldo_terkini'] ?? $a['jumlah'];
-            if ($nilai > 0) $totalAset += $nilai;
-        }
+    // =======================
+    // Hitung Total
+    // =======================
 
-        // hitung penyusutan
-        foreach ($list as &$row) {
-            $awal = (float) $row['jumlah'];
-            $sekarang = (float) ($row['saldo_terkini'] ?? $awal);
-            $row['penyusutan'] = max(0, $awal - $sekarang);
-        }
+       //---- Ambil dari tabel aset
+       $totalAsetUtama = array_sum(array_column($list, 'nilai_sekarang'));
+
+       // ---- Ambil dari kekayaan awal kategori aset
+        $totalAwal = array_sum(array_column($awal, 'jumlah'));
+
+        // ---- gabungan total keduanya
+        $totalAset = $totalAsetUtama + $totalAwal;
 
         $data = [
-            'title'      => 'Aset',
-            'list'       => $list,
-            'totalAset'  => $totalAset,
-            'status'     => $status,
+            'title'     => 'Aset',
+            'list'      => $list,
+            'akun'      => $akun,
+            'totalAset' => $totalAset,
         ];
 
         return view('aset/index', $data);
     }
 
-    // =========================
-    // SIMPAN ASET BARU
-    // =========================
+    // =======================
+    // ➕ TAMBAH ASET
+    // =======================
     public function store()
     {
-        $uid     = $this->uid();
-        $nama    = trim((string)$this->request->getPost('nama'));
-        $jumlah  = (float)$this->request->getPost('jumlah');
-        $akun_id = (int)$this->request->getPost('akun_id');
+        $uid      = $this->uid();
+        $nama     = $this->request->getPost('nama');
+        $akun_id  = $this->request->getPost('akun_id');
+        $jumlah   = (float) $this->request->getPost('jumlah');
+        $desc     = $this->request->getPost('deskripsi') ?? '';
+        $tanggal  = date('Y-m-d');
 
-        if ($nama === '' || $jumlah <= 0) {
-            return redirect()->back()->with('error', 'Nama dan nilai aset wajib diisi.');
+        if (!$nama || !$akun_id || $jumlah <= 0) {
+            return redirect()->back()->with('error', 'Data belum lengkap.');
         }
 
-        // simpan ke tabel kekayaan_item
-        $this->items->insert([
-            'user_id'       => $uid,
-            'kategori'      => 'aset',
-            'deskripsi'     => $nama,
-            'jumlah'        => $jumlah,
-            'saldo_terkini' => $jumlah,
+        $this->aset->insert([
+            'user_id'        => $uid,
+            'tanggal'        => $tanggal,
+            'nama'           => $nama,
+            'akun_id'        => $akun_id,
+            'jumlah'         => $jumlah,
+            'nilai_sekarang'  => $jumlah, // ✅ ganti nilai_sekarang jadi saldo_terkini
+            'deskripsi'      => $desc,
+            'status'         => 'aktif',
+            // 'kategori'       => 'aset'
         ]);
-        $itemId = $this->items->getInsertID();
 
-        // catat transaksi pembelian aset (uang keluar)
-        if ($akun_id) {
-            $this->trx->insert([
-                'user_id'   => $uid,
-                'tanggal'   => date('Y-m-d'),
-                'jenis'     => 'out',
-                'sumber_id' => $akun_id,
-                'kategori'  => 'Aset',
-                'deskripsi' => 'Pembelian aset: ' . $nama,
-                'jumlah'    => $jumlah,
-            ]);
-        }
+        // Catat ke transaksi
+        $this->trx->insert([
+            'user_id'   => $uid,
+            'tanggal'   => $tanggal,
+            'jenis'     => 'out',
+            'sumber_id' => $akun_id,
+            'kategori'  => 'Aset',
+            'deskripsi' => "Pembelian aset: $nama",
+            'jumlah'    => $jumlah,
+        ]);
 
-        return redirect()->to('/aset')->with('message', 'Aset baru berhasil ditambahkan.');
+        return redirect()->to('/aset')->with('message', 'Aset berhasil ditambahkan.');
     }
 
-    // =========================
-    // UPDATE NILAI ASET (misal dijual / berubah harga)
-    // =========================
-    public function update($id)
+    // =======================
+    // 🔄 UPDATE NILAI SEKARANG
+    // =======================
+    public function updateNilai()
     {
         $uid   = $this->uid();
-        $row   = $this->items->find($id);
-        if (!$row || $row['user_id'] != $uid || $row['kategori'] != 'aset') {
+        $id    = $this->request->getPost('id');
+        $nilai = (float) $this->request->getPost('nilai_sekarang'); // ✅ kolom disesuaikan
+
+        $row = $this->aset->where(['user_id' => $uid, 'id' => $id])->first();
+        if (!$row) {
             return redirect()->back()->with('error', 'Aset tidak ditemukan.');
         }
 
-        $nilaiBaru = (float)$this->request->getPost('nilai_sekarang');
-        $akun_id   = (int)$this->request->getPost('akun_id');
+        $this->aset->update($id, ['nilai_sekarang' => $nilai]); // ✅ kolom disesuaikan
 
-        $nilaiLama = (float)($row['saldo_terkini'] ?? $row['jumlah']);
-        $selisih   = $nilaiBaru - $nilaiLama;
-
-        // update nilai saldo terkini
-        $this->items->update($id, [
-            'saldo_terkini' => $nilaiBaru
-        ]);
-
-        // catat transaksi perubahan nilai (jual / penyusutan / apresiasi)
-        if ($akun_id && $selisih != 0) {
-            $this->trx->insert([
-                'user_id'   => $uid,
-                'tanggal'   => date('Y-m-d'),
-                'jenis'     => $selisih > 0 ? 'in' : 'out',
-                'sumber_id' => $akun_id,
-                'kategori'  => 'Aset',
-                'deskripsi' => $selisih > 0 
-                    ? 'Penjualan aset: ' . $row['deskripsi']
-                    : 'Penurunan nilai aset: ' . $row['deskripsi'],
-                'jumlah'    => abs($selisih),
-            ]);
-        }
-
-        return redirect()->to('/aset')->with('message', 'Nilai aset berhasil diperbarui.');
+        return redirect()->to('/aset')->with('message', 'Nilai aset diperbarui.');
     }
 
-    // =========================
-    // HAPUS ASET
-    // =========================
+    // =======================
+    // 💰 JUAL ASET
+    // =======================
+    public function jual()
+    {
+        $uid       = $this->uid();
+        $id        = $this->request->getPost('id');
+        $nilai     = (float) $this->request->getPost('nilai_sekarang'); // ✅ kolom disesuaikan
+        $akun_id   = $this->request->getPost('akun_id');
+        $desc      = $this->request->getPost('deskripsi') ?? '';
+        $tanggal   = date('Y-m-d');
+
+        $row = $this->aset->where(['user_id' => $uid, 'id' => $id])->first();
+        if (!$row) {
+            return redirect()->back()->with('error', 'Aset tidak ditemukan.');
+        }
+
+        $this->aset->update($id, [
+            'status'        => 'selesai',
+            'nilai_sekarang' => $nilai, // ✅ kolom disesuaikan
+        ]);
+
+        $this->trx->insert([
+            'user_id'   => $uid,
+            'tanggal'   => $tanggal,
+            'jenis'     => 'in',
+            'sumber_id' => $akun_id,
+            'kategori'  => 'Aset',
+            'deskripsi' => "Penjualan aset: {$row['nama']}",
+            'jumlah'    => $nilai,
+        ]);
+
+        return redirect()->to('/aset')->with('message', 'Aset berhasil dijual.');
+    }
+
+    // =======================
+    // 🗑️ HAPUS ASET
+    // =======================
     public function delete($id)
     {
         $uid = $this->uid();
-        $row = $this->items->find($id);
-        if (!$row || $row['user_id'] != $uid || $row['kategori'] != 'aset') {
-            return redirect()->back()->with('error', 'Aset tidak ditemukan.');
+        $row = $this->aset->where(['user_id' => $uid, 'id' => $id])->first();
+
+        if (!$row) {
+            return redirect()->back()->with('error', 'Data tidak ditemukan.');
         }
 
-        $this->items->delete($id);
-        return redirect()->to('/aset')->with('message', 'Aset telah dihapus.');
+        $this->aset->delete($id);
+        return redirect()->to('/aset')->with('message', 'Data aset dihapus.');
     }
 }

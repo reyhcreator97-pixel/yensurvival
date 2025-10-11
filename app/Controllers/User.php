@@ -39,6 +39,7 @@ class User extends BaseController
     $utangM   = new \App\Models\UtangModel();
     $piutangM = new \App\Models\PiutangModel();
     $investM  = new \App\Models\InvestasiModel(); // ✅ tambah model investasi
+    $asetM    = new \App\Models\AsetModel();
 
     // Total Uang: pakai saldo_terkini kalau ada, fallback ke jumlah
     $rowSaldo = $items->selectSum('saldo_terkini', 's')
@@ -95,11 +96,6 @@ class User extends BaseController
     $totalAset = (float)($items->where(['user_id' => $uid, 'kategori' => 'aset'])
         ->selectSum('jumlah')->first()['jumlah'] ?? 0);
 
-    // --- ✅ Perbaikan Total Investasi (gabungan kekayaan_awal + investasi) ---
-    // $totalInvestasiAwal = (float)($items->where(['user_id' => $uid, 'kategori' => 'investasi'])
-    //     ->selectSum('jumlah')->first()['jumlah'] ?? 0);
-
-
     //--- Prioritaskan saldo_terkini kalau ada, fallback ke jumlah
     $rowInv =$items->selectSum('saldo_terkini', 's')
     ->where(['user_id' => $uid, 'kategori' => 'investasi'])
@@ -119,7 +115,21 @@ class User extends BaseController
         ->selectSum('nilai_sekarang')->first()['nilai_sekarang'] ?? 0);
 
     $totalInvestasi = $totalInvestasiAwal + $totalInvestasiTransaksi;
+    
+    
     // -----------------------------------------------------
+    // : ASET
+    // -----------------------------------------------------
+    //---- Ambil dari tabel Aset
+    $listAset = $asetM->where('user_id', $uid)->findAll();
+    $totalAsetUtama = array_sum(array_column($listAset,'nilai_sekarang'));
+
+    // ---- Ambil total dari kekayaan Awal kategori aset
+    $awalAset = $items->where(['user_id' => $uid, 'kategori' => 'aset'])->findAll();
+    $totalAwalAset = array_sum(array_column($awalAset, 'jumlah'));
+
+    // ---- Gabungkan keduanya
+    $totalAset = $totalAsetUtama + $totalAwalAset;
 
     // --- Konversi ke IDR ---
     $totalUangIdr      = $kurs > 0 ? $totalUang * $kurs : 0;

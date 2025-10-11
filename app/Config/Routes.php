@@ -12,23 +12,17 @@ $routes->get('/register', 'Home::register');
 $routes->get('/user', 'Home::user');
 
 
-// =========================
-// ROUTES: ASET
-// =========================
+// ===============================
+// 📦 ROUTES UNTUK PAGE ASET
+// ===============================
 $routes->group('aset', ['filter' => 'login'], function($routes) {
-    
-    // Halaman utama aset (daftar aset)
-    $routes->get('/', 'Aset::index');
-
-    // Tambah aset baru
-    $routes->post('store', 'Aset::store');
-
-    // Update nilai aset (jual / apresiasi / penyusutan)
-    $routes->post('update/(:num)', 'Aset::update/$1');
-
-    // Hapus aset
-    $routes->post('delete/(:num)', 'Aset::delete/$1');
+    $routes->get('/', 'Aset::index');               // Halaman utama daftar aset
+    $routes->post('store', 'Aset::store');          // Tambah aset baru
+    $routes->post('updateNilai', 'Aset::updateNilai'); // Update nilai sekarang
+    $routes->post('jual', 'Aset::jual');            // Jual aset
+    $routes->post('delete/(:num)', 'Aset::delete/$1'); // Hapus aset
 });
+
 
 
 // --- UTANG
