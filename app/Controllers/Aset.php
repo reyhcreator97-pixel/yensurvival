@@ -52,7 +52,7 @@ class Aset extends BaseController
                 'jumlah'          => $r['jumlah'],
                 'nilai_sekarang'  => $r['saldo_terkini'] ?? $r['jumlah'],
                 'deskripsi'       => $r['deskripsi'],
-                'status'          => 'aktif',
+                'status'          => (strpos($r['deskripsi'], '(Terjual)') !== false) ? 'selesai':'aktif',
             ];
         }
     
@@ -152,54 +152,110 @@ class Aset extends BaseController
     }
     
 
-    // =======================
-    // 💰 JUAL ASET
-    // =======================
-    public function jual()
-    {
-        $uid       = $this->uid();
-        $id        = $this->request->getPost('id');
-        $nilai     = (float) $this->request->getPost('nilai_sekarang'); // ✅ kolom disesuaikan
-        $akun_id   = $this->request->getPost('akun_id');
-        $desc      = $this->request->getPost('deskripsi') ?? '';
-        $tanggal   = date('Y-m-d');
+// =======================
+// 💰 JUAL ASET
+// =======================
+public function jual()
+{
+    $uid       = $this->uid();
+    $id        = (int)$this->request->getPost('id');
+    $nilai     = (float)$this->request->getPost('nilai_sekarang');
+    $akun_id   = $this->request->getPost('akun_id');
+    $desc      = $this->request->getPost('deskripsi') ?? '';
+    $tanggal   = date('Y-m-d');
 
-        $row = $this->aset->where(['user_id' => $uid, 'id' => $id])->first();
-        if (!$row) {
-            return redirect()->back()->with('error', 'Aset tidak ditemukan.');
-        }
+    // Cari di tabel aset
+    $row = $this->aset->where(['user_id' => $uid, 'id' => $id])->first();
 
-        $this->aset->update($id, [
-            'status'        => 'selesai',
-            'nilai_sekarang' => $nilai, // ✅ kolom disesuaikan
+    // Kalau tidak ditemukan, cari di kekayaan awal (kategori aset)
+    if (!$row) {
+        $row = $this->kekayaan
+            ->where('user_id', $uid)
+            ->where('kategori', 'aset')
+            ->groupStart()
+                ->where('id', $id)
+                ->orWhere('deskripsi', $desc)
+                ->orWhere('deskripsi LIKE', '%(Terjual)%')
+            ->groupEnd()
+            ->first();
+    }
+
+    if (!$row) {
+        return redirect()->back()->with('error', 'Aset tidak ditemukan.');
+    }
+
+    // Update status dan nilai
+    if (isset($row['status'])) {
+        // dari tabel aset
+        $this->aset->update($row['id'], [
+            'status'         => 'selesai',
+            'nilai_sekarang' => $nilai,
         ]);
+    } else {
+        // dari kekayaan awal
+        $this->kekayaan
+            ->where('id', $row['id'])
+            ->set([
+                'saldo_terkini' => $nilai,
+                'deskripsi'     => $row['deskripsi'] . ' (Terjual)',
+                'updated_at'    => date('Y-m-d H:i:s'),
+            ])
+            ->update();
+    }
 
+    // Catat transaksi masuk
+    if (!empty($akun_id)) {
         $this->trx->insert([
             'user_id'   => $uid,
             'tanggal'   => $tanggal,
             'jenis'     => 'in',
             'sumber_id' => $akun_id,
             'kategori'  => 'Aset',
-            'deskripsi' => "Penjualan aset: {$row['nama']}",
+            'deskripsi' => 'Penjualan aset: ' . ($row['nama'] ?? $row['deskripsi']),
             'jumlah'    => $nilai,
         ]);
-
-        return redirect()->to('/aset')->with('message', 'Aset berhasil dijual.');
     }
 
-    // =======================
-    // 🗑️ HAPUS ASET
-    // =======================
-    public function delete($id)
-    {
-        $uid = $this->uid();
-        $row = $this->aset->where(['user_id' => $uid, 'id' => $id])->first();
+    return redirect()->to('/aset')->with('message', 'Aset berhasil dijual.');
+}
 
-        if (!$row) {
-            return redirect()->back()->with('error', 'Data tidak ditemukan.');
-        }
+// =======================
+// 🗑️ HAPUS ASET
+// =======================
+public function delete($id)
+{
+    $uid = $this->uid();
 
-        $this->aset->delete($id);
-        return redirect()->to('/aset')->with('message', 'Data aset dihapus.');
+    // 1️⃣ Cari di tabel aset
+    $row = $this->aset
+        ->where(['user_id' => $uid, 'id' => $id])
+        ->first();
+
+    // 2️⃣ Kalau gak ketemu, cari di kekayaan awal kategori aset
+    if (!$row) {
+        $row = $this->kekayaan
+            ->where('user_id', $uid)
+            ->where('kategori', 'aset')
+            ->groupStart()
+                ->where('id', $id)
+                ->orWhere('deskripsi LIKE', '%(Terjual)%')
+            ->groupEnd()
+            ->first();
     }
+
+    // 3️⃣ Kalau tetap gak ada
+    if (!$row) {
+        return redirect()->back()->with('error', 'Data tidak ditemukan.');
+    }
+
+    // 4️⃣ Hapus dari tabel sesuai sumbernya
+    if (isset($row['status'])) {
+        $this->aset->delete($row['id']);
+    } else {
+        $this->kekayaan->delete($row['id']);
+    }
+
+    return redirect()->to('/aset')->with('message', 'Data aset berhasil dihapus.');
+}
+
 }

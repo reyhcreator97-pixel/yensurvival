@@ -23,71 +23,80 @@ class Transaksi extends BaseController
     public function index(): string
     {
         $uid = $this->uid();
+    
+        // === Filter: daily / monthly / yearly ===
+        $mode  = $this->request->getGet('mode')  ?? 'daily';
+        $date  = $this->request->getGet('date')  ?? date('Y-m-d');
+        $month = $this->request->getGet('month') ?? date('Y-m');
+        $year  = $this->request->getGet('year')  ?? date('Y');
 
-  // === Filter: daily / monthly / yearly (tetap sama dengan sebelumnya) ===
-  $mode  = $this->request->getGet('mode')  ?? 'daily';       // daily|monthly|yearly
-  $date  = $this->request->getGet('date')  ?? date('Y-m-d'); // utk daily
-  $month = $this->request->getGet('month') ?? date('Y-m');   // utk monthly (YYYY-MM)
-  $year  = $this->request->getGet('year')  ?? date('Y');     // utk yearly (YYYY)
+        // ambil tanggal terbaru dari transaksi kalau filter harian kosong
+// if ($mode === 'daily' && !$this->request->getGet('date')) {
+//     $lastDate = $this->trx->selectMax('tanggal')->where('user_id', $uid)->get()->getRow('tanggal');
+//     if ($lastDate) {
+//         $date = $lastDate;
+//     }
+// }
 
-  // Helper untuk menerapkan filter yang sama ke beberapa builder
-  $applyFilter = function($builder) use ($mode, $date, $month, $year) {
-      if ($mode === 'daily') {
-          $builder->where('tanggal', $date);
-      } elseif ($mode === 'monthly') {
-          [$y,$m] = explode('-', $month);
-          $builder->where('YEAR(tanggal)', $y)
-                  ->where('MONTH(tanggal)', $m);
-      } else { // yearly
-          $builder->where('YEAR(tanggal)', $year);
-      }
-      return $builder;
-  };
-
-  // --- Data tabel (list) sesuai filter ---
-  $builderList = $this->trx->where('user_id', $uid);
-  $applyFilter($builderList);
-  $list = $builderList->orderBy('tanggal','DESC')->findAll();
-
-  // --- Totals sesuai filter (dipakai 3 card) ---
-  // Total pemasukan: jenis 'in' (atau kompatibel 'pemasukan')
-  $builderIn = $this->trx->selectSum('jumlah')
-                         ->where('user_id', $uid)
-                         ->groupStart()
-                             ->where('jenis', 'in')
-                             ->orWhere('jenis', 'pemasukan')
-                         ->groupEnd();
-  $applyFilter($builderIn);
-  $rowIn    = $builderIn->get()->getRow();
-  $totalIn  = (float)($rowIn->jumlah ?? 0);
-
-  // Total pengeluaran: jenis 'out' (atau kompatibel 'pengeluaran')
-  $builderOut = $this->trx->selectSum('jumlah')
-                          ->where('user_id', $uid)
-                          ->groupStart()
-                              ->where('jenis', 'out')
-                              ->orWhere('jenis', 'pengeluaran')
-                          ->groupEnd();
-  $applyFilter($builderOut);
-  $rowOut    = $builderOut->get()->getRow();
-  $totalOut  = (float)($rowOut->jumlah ?? 0);
-
-  $saldo = $totalIn - $totalOut;
-
-
-        // --- Ambil total saldo real dari akun (uang) ---
-        $totalSaldoAkun = (float) ($this->items
-            ->where('user_id', $uid)
-            ->where('kategori', 'uang')
-            ->selectSum('saldo_terkini')
-            ->get()->getRow('saldo_terkini') ?? 0);
-
-        // --- Ambil daftar akun dari kekayaan awal (kategori uang) ---
+    
+        // Helper filter universal
+        $applyFilter = function($builder) use ($mode, $date, $month, $year) {
+            if ($mode === 'daily') {
+                // ✅ cocok untuk kolom tipe DATE
+                $builder->where('tanggal', $date);
+            } elseif ($mode === 'monthly') {
+                [$y, $m] = explode('-', $month);
+                $builder->where('YEAR(tanggal)', $y)
+                        ->where('MONTH(tanggal)', $m);
+            } else {
+                $builder->where('YEAR(tanggal)', $year);
+            }
+            return $builder;
+        };
+        
+        
+    
+        // --- Ambil semua transaksi (tidak filter kategori apapun) ---
+        $trxModel = $this->trx; // clone biar query tidak nempel
+        $builderList = $trxModel->builder();
+        $builderList->where('user_id', $uid);
+        $applyFilter($builderList);
+        $builderList->orderBy('tanggal', 'DESC');
+        $list = $builderList->get()->getResultArray();
+    
+        // --- Total Pemasukan ---
+        $builderIn = $trxModel->builder();
+        $builderIn->selectSum('jumlah')
+                  ->where('user_id', $uid)
+                  ->groupStart()
+                      ->where('jenis', 'in')
+                      ->orWhere('jenis', 'pemasukan')
+                  ->groupEnd();
+        $applyFilter($builderIn);
+        $rowIn = $builderIn->get()->getRow();
+        $totalIn = (float)($rowIn->jumlah ?? 0);
+    
+        // --- Total Pengeluaran ---
+        $builderOut = $trxModel->builder();
+        $builderOut->selectSum('jumlah')
+                   ->where('user_id', $uid)
+                   ->groupStart()
+                       ->where('jenis', 'out')
+                       ->orWhere('jenis', 'pengeluaran')
+                   ->groupEnd();
+        $applyFilter($builderOut);
+        $rowOut = $builderOut->get()->getRow();
+        $totalOut = (float)($rowOut->jumlah ?? 0);
+    
+        // ✅ Saldo hasil perhitungan in - out
+        $saldo = $totalIn - $totalOut;
+    
+        // --- Ambil daftar akun (uang) ---
         $akun = $this->items->where([
             'user_id'  => $uid,
             'kategori' => 'uang'
         ])->orderBy('id', 'ASC')->findAll();
-
+    
         $data = [
             'title'     => 'Transaksi',
             'mode'      => $mode,
@@ -97,12 +106,19 @@ class Transaksi extends BaseController
             'list'      => $list,
             'totalIn'   => $totalIn,
             'totalOut'  => $totalOut,
-            'saldo'     => $totalSaldoAkun, // ✅ saldo real dari akun
+            'saldo'     => $saldo,
             'akun'      => $akun,
         ];
 
+        // dd([
+        //     'today' => $date,
+        //     'sampel' => $this->trx->orderBy('id', 'desc')->limit(5)->findAll(),
+        // ]);
+
         return view('transaksi/index', $data);
     }
+    
+    
 
     // Tambah pemasukan/pengeluaran
     public function store()
