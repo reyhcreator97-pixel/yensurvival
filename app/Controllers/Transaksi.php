@@ -24,45 +24,55 @@ class Transaksi extends BaseController
     {
         $uid = $this->uid();
 
-        // --- Filter Harian / Bulanan / Tahunan ---
-        $mode   = $this->request->getGet('mode') ?? 'daily';
-        $date   = $this->request->getGet('date') ?? date('Y-m-d');
-        $month  = $this->request->getGet('month') ?? date('Y-m');
-        $year   = $this->request->getGet('year') ?? date('Y');
+  // === Filter: daily / monthly / yearly (tetap sama dengan sebelumnya) ===
+  $mode  = $this->request->getGet('mode')  ?? 'daily';       // daily|monthly|yearly
+  $date  = $this->request->getGet('date')  ?? date('Y-m-d'); // utk daily
+  $month = $this->request->getGet('month') ?? date('Y-m');   // utk monthly (YYYY-MM)
+  $year  = $this->request->getGet('year')  ?? date('Y');     // utk yearly (YYYY)
 
-        $builder = $this->trx->where('user_id', $uid);
+  // Helper untuk menerapkan filter yang sama ke beberapa builder
+  $applyFilter = function($builder) use ($mode, $date, $month, $year) {
+      if ($mode === 'daily') {
+          $builder->where('tanggal', $date);
+      } elseif ($mode === 'monthly') {
+          [$y,$m] = explode('-', $month);
+          $builder->where('YEAR(tanggal)', $y)
+                  ->where('MONTH(tanggal)', $m);
+      } else { // yearly
+          $builder->where('YEAR(tanggal)', $year);
+      }
+      return $builder;
+  };
 
-        if ($mode === 'daily') {
-            $builder->where('tanggal', $date);
-        } elseif ($mode === 'monthly') {
-            [$y, $m] = explode('-', $month);
-            $builder->where('YEAR(tanggal)', $y)->where('MONTH(tanggal)', $m);
-        } else { // yearly
-            $builder->where('YEAR(tanggal)', $year);
-        }
+  // --- Data tabel (list) sesuai filter ---
+  $builderList = $this->trx->where('user_id', $uid);
+  $applyFilter($builderList);
+  $list = $builderList->orderBy('tanggal','DESC')->findAll();
 
-        $list = $builder->orderBy('tanggal', 'DESC')->findAll();
+  // --- Totals sesuai filter (dipakai 3 card) ---
+  // Total pemasukan: jenis 'in' (atau kompatibel 'pemasukan')
+  $builderIn = $this->trx->selectSum('jumlah')
+                         ->where('user_id', $uid)
+                         ->groupStart()
+                             ->where('jenis', 'in')
+                             ->orWhere('jenis', 'pemasukan')
+                         ->groupEnd();
+  $applyFilter($builderIn);
+  $rowIn    = $builderIn->get()->getRow();
+  $totalIn  = (float)($rowIn->jumlah ?? 0);
 
-// --- Hitung total transaksi masuk & keluar (buat analisis transaksi aja) ---
-$totalIn = (float) $this->trx
-    ->where('user_id', $uid)
-    ->groupStart()
-        ->where('jenis', 'in')
-        ->orWhere('jenis', 'pemasukan')
-    ->groupEnd()
-    ->selectSum('jumlah')
-    ->get()
-    ->getRow('jumlah') ?? 0;
+  // Total pengeluaran: jenis 'out' (atau kompatibel 'pengeluaran')
+  $builderOut = $this->trx->selectSum('jumlah')
+                          ->where('user_id', $uid)
+                          ->groupStart()
+                              ->where('jenis', 'out')
+                              ->orWhere('jenis', 'pengeluaran')
+                          ->groupEnd();
+  $applyFilter($builderOut);
+  $rowOut    = $builderOut->get()->getRow();
+  $totalOut  = (float)($rowOut->jumlah ?? 0);
 
-$totalOut = (float) $this->trx
-    ->where('user_id', $uid)
-    ->groupStart()
-        ->where('jenis', 'out')
-        ->orWhere('jenis', 'pengeluaran')
-    ->groupEnd()
-    ->selectSum('jumlah')
-    ->get()
-    ->getRow('jumlah') ?? 0;
+  $saldo = $totalIn - $totalOut;
 
 
         // --- Ambil total saldo real dari akun (uang) ---

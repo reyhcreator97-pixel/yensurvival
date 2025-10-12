@@ -92,9 +92,7 @@ class User extends BaseController
         if ($sisa > 0) $totalPiutang += $sisa;
     }
 
-    // --- Aset tetap dari kekayaan_awal ---
-    $totalAset = (float)($items->where(['user_id' => $uid, 'kategori' => 'aset'])
-        ->selectSum('jumlah')->first()['jumlah'] ?? 0);
+ 
 
     //--- Prioritaskan saldo_terkini kalau ada, fallback ke jumlah
     $rowInv =$items->selectSum('saldo_terkini', 's')
@@ -120,16 +118,35 @@ class User extends BaseController
     // -----------------------------------------------------
     // : ASET
     // -----------------------------------------------------
+
+    $rowInv =$items->selectSum('saldo_terkini', 's')
+    ->where(['user_id' => $uid, 'kategori' => 'aset'])
+    ->get()->getRow();
+
+    $totalAsetAwal =(float)($rowInv->s ?? 0);
+
+    if ($totalAsetAwal <= 0){
+        $rowJumlah = $items->selectSum('jumlah', 'j')
+        ->where(['user_id' => $uid, 'kategori' => 'aset'])
+        ->get()->getRow();
+        $totalAsetAwal = (float)($rowJumlah->j ?? 0);
+    }
+
+    //--- setelah itu gabung dengan data investasi dari tabel investasi 
+    $totalAsetTransaksi = (float)($asetM->where('user_id', $uid)
+        ->selectSum('nilai_sekarang')->first()['nilai_sekarang'] ?? 0);
+
+    $totalAset = $totalAsetAwal + $totalAsetTransaksi;
     //---- Ambil dari tabel Aset
-    $listAset = $asetM->where('user_id', $uid)->findAll();
-    $totalAsetUtama = array_sum(array_column($listAset,'nilai_sekarang'));
+    // $listAset = $asetM->where('user_id', $uid)->findAll();
+    // $totalAsetUtama = array_sum(array_column($listAset,'nilai_sekarang'));
 
     // ---- Ambil total dari kekayaan Awal kategori aset
-    $awalAset = $items->where(['user_id' => $uid, 'kategori' => 'aset'])->findAll();
-    $totalAwalAset = array_sum(array_column($awalAset, 'jumlah'));
+    // $awalAset = $items->where(['user_id' => $uid, 'kategori' => 'aset'])->findAll();
+    // $totalAwalAset = array_sum(array_column($awalAset, 'jumlah'));
 
     // ---- Gabungkan keduanya
-    $totalAset = $totalAsetUtama + $totalAwalAset;
+    // $totalAset = $totalAsetUtama + $totalAwalAset;
 
     // --- Konversi ke IDR ---
     $totalUangIdr      = $kurs > 0 ? $totalUang * $kurs : 0;

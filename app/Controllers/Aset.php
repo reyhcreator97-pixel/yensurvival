@@ -29,68 +29,52 @@ class Aset extends BaseController
     // =======================
     public function index()
     {
-        $uid  = $this->uid();
-        $list = $this->aset->getAllByUser($uid);
-
-        // Ambil akun uang dari kekayaan awal
-        $akun = $this->kekayaan->where([
-            'user_id'  => $uid,
-            'kategori' => 'uang'
-        ])->findAll();
-
-        // Jika data dari kekayaan awal belum tergenerate ke aset
-        $awal = $this->kekayaan->where([
-            'user_id'  => $uid,
-            'kategori' => 'aset'
-        ])->findAll();
-
-        // Sinkronisasi data kekayaan awal ke tabel aset
-        foreach ($awal as $r) {
-            $exists = $this->aset
-                ->where('user_id', $uid)
-                ->where('nama', $r['deskripsi'])
-                // ->where('kategori', 'aset')
-                ->first();
-
-            if (!$exists) {
-                $this->aset->insert([
-                    'user_id'        => $uid,
-                    'tanggal'        => date('Y-m-d'),
-                    'nama'           => $r['deskripsi'],
-                    'akun_id'        => null,
-                    'jumlah'         => $r['jumlah'],
-                    'nilai_sekarang'  => $r['jumlah'], // ✅ ganti nilai_sekarang jadi saldo_terkini
-                    'deskripsi'      => 'Data dari Kekayaan Awal',
-                    'status'         => 'aktif',
-                    // 'kategori'       => 'aset'
-                ]);
-            }
+        $uid = $this->uid();
+    
+        // 1️⃣ Ambil semua data investasi yang disimpan manual
+        $list = $this->aset
+            ->where('user_id', $uid)
+            ->orderBy('id', 'DESC')
+            ->findAll();
+    
+        // 2️⃣ Ambil juga data dari kekayaan_awal kategori investasi
+        $dariKekayaan = $this->kekayaan
+            ->where(['user_id' => $uid, 'kategori' => 'aset'])
+            ->findAll();
+    
+        // 3️⃣ Satukan hasil tanpa ubah struktur variabel
+        foreach ($dariKekayaan as $r) {
+            $list[] = [
+                'id'              => $r['id'],
+                'tanggal'         => $r['created_at'] ?? '',
+                'nama'            => $r['deskripsi'],
+                'akun_id'         => null,
+                'jumlah'          => $r['jumlah'],
+                'nilai_sekarang'  => $r['saldo_terkini'] ?? $r['jumlah'],
+                'deskripsi'       => $r['deskripsi'],
+                'status'          => 'aktif',
+            ];
         }
-
-
-    // =======================
-    // Hitung Total
-    // =======================
-
-       //---- Ambil dari tabel aset
-       $totalAsetUtama = array_sum(array_column($list, 'nilai_sekarang'));
-
-       // ---- Ambil dari kekayaan awal kategori aset
-        $totalAwal = array_sum(array_column($awal, 'jumlah'));
-
-        // ---- gabungan total keduanya
-        $totalAset = $totalAsetUtama + $totalAwal;
-
+    
+        // 4️⃣ Akun untuk dropdown
+        $akun = $this->kekayaan
+            ->where(['user_id' => $uid, 'kategori' => 'uang'])
+            ->findAll();
+    
+        // 5️⃣ Hitung total nilai sekarang (tetap sama variabelnya)
+        $totalAset = array_sum(array_column($list, 'nilai_sekarang'));
+        
+    
         $data = [
-            'title'     => 'Aset',
-            'list'      => $list,
-            'akun'      => $akun,
+            'title'          => 'Aset',
+            'list'           => $list,
+            'akun'           => $akun,
             'totalAset' => $totalAset,
         ];
-
+    
         return view('aset/index', $data);
     }
-
+ 
     // =======================
     // ➕ TAMBAH ASET
     // =======================
@@ -140,17 +124,33 @@ class Aset extends BaseController
     {
         $uid   = $this->uid();
         $id    = $this->request->getPost('id');
-        $nilai = (float) $this->request->getPost('nilai_sekarang'); // ✅ kolom disesuaikan
-
-        $row = $this->aset->where(['user_id' => $uid, 'id' => $id])->first();
-        if (!$row) {
-            return redirect()->back()->with('error', 'Aset tidak ditemukan.');
+        $nilai = (float) $this->request->getPost('nilai_sekarang');
+    
+        // Coba cari dulu di tabel investasi
+        $row = $this->aset->where('id', $id)->first();
+    
+        if ($row) {
+            // ✅ Update dari tabel investasi
+            $this->aset->update($id, ['nilai_sekarang' => $nilai]);
+            return redirect()->to('/aset')->with('message', 'Nilai Aset diperbarui.');
         }
-
-        $this->aset->update($id, ['nilai_sekarang' => $nilai]); // ✅ kolom disesuaikan
-
-        return redirect()->to('/aset')->with('message', 'Nilai aset diperbarui.');
+    
+        // Kalau gak ada di tabel investasi, cek di tabel kekayaan_awal
+        $cekAwal = $this->kekayaan
+            ->where('id', $id)
+            ->where('kategori', 'aset')
+            ->first();
+    
+        if ($cekAwal) {
+            // ✅ Update dari data kekayaan_awal kategori investasi
+            $this->kekayaan->update($id, ['saldo_terkini' => $nilai]);
+            return redirect()->to('/aset')->with('message', 'Nilai aset awal diperbarui.');
+        }
+    
+        // Kalau gak ditemukan di dua-duanya
+        return redirect()->back()->with('error', 'Aset tidak ditemukan.');
     }
+    
 
     // =======================
     // 💰 JUAL ASET

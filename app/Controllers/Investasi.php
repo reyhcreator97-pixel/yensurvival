@@ -52,7 +52,7 @@ class Investasi extends BaseController
                 'jumlah'          => $r['jumlah'],
                 'nilai_sekarang'  => $r['saldo_terkini'] ?? $r['jumlah'],
                 'deskripsi'       => $r['deskripsi'],
-                'status'          => 'aktif',
+                'status'          => (strpos($r['deskripsi'], '(Terjual)') !== false) ? 'selesai':'aktif',
             ];
         }
     
@@ -63,7 +63,7 @@ class Investasi extends BaseController
     
         // 5️⃣ Hitung total nilai sekarang (tetap sama variabelnya)
         $totalInvestasi = array_sum(array_column($list, 'nilai_sekarang'));
-    
+        
         $data = [
             'title'          => 'Investasi',
             'list'           => $list,
@@ -151,56 +151,115 @@ class Investasi extends BaseController
     }
     
 
-    // ======================
-    // 💰 JUAL INVESTASI
-    // ======================
-    public function jual()
-    {
-        $uid     = $this->uid();
-        $id      = (int) $this->request->getPost('id');
-        $nilai   = (float) $this->request->getPost('nilai_sekarang');
-        $akun_id = $this->request->getPost('akun_id');
-        $tanggal = date('Y-m-d');
+// =======================
+// 💰 JUAL INVESTASI
+// =======================
+public function jual()
+{
+    $uid      = $this->uid();
+    $id       = (int)$this->request->getPost('id');
+    $nilai    = (float)$this->request->getPost('nilai_sekarang');
+    $akun_id  = $this->request->getPost('akun_id');
+    $desc     = $this->request->getPost('deskripsi') ?? '';
+    $tanggal  = date('Y-m-d');
 
-        $row = $this->investasi->where(['user_id' => $uid, 'id' => $id])->first();
-        if (!$row) {
-            return redirect()->back()->with('error', 'Investasi tidak ditemukan.');
-        }
+    // Cari di tabel investasi dulu
+    $row = $this->investasi->where(['user_id' => $uid, 'id' => $id])->first();
 
-        // Update status dan nilai
-        $this->investasi->update($id, [
+    // Kalau gak ketemu, cari di kekayaan awal (kategori investasi)
+    if (!$row) {
+        $row = $this->kekayaan
+            ->where('user_id', $uid)
+            ->where('kategori', 'investasi')
+            ->groupStart()
+                ->where('id', $id)
+                ->orWhere('deskripsi', $desc)
+            ->groupEnd()
+            ->first();
+    }
+
+    // Kalau tetap gak ketemu
+    if (!$row) {
+        return redirect()->back()->with('error', 'Investasi tidak ditemukan.');
+    }
+
+    // Update status dan nilai
+    if (isset($row['status'])) {
+        // Dari tabel investasi
+        $this->investasi->update($row['id'], [
             'status'         => 'selesai',
             'nilai_sekarang' => $nilai,
         ]);
+    } else {
+        // Dari kekayaan awal
+        $this->kekayaan
+            ->where('id', $row['id'])
+            ->set([
+                'saldo_terkini' => $nilai,
+                'deskripsi'     => $row['deskripsi'] . ' (Terjual)',
+                'updated_at'    => date('Y-m-d H:i:s'),
+            ])
+            ->update();
+    }
 
-        // Catat ke transaksi (uang masuk)
+    // Catat transaksi hanya jika akun_id valid
+    if (!empty($akun_id)) {
         $this->trx->insert([
             'user_id'   => $uid,
             'tanggal'   => $tanggal,
             'jenis'     => 'in',
             'sumber_id' => $akun_id,
-            'kategori'  => 'Investasi',
-            'deskripsi' => 'Jual investasi: ' . $row['nama'],
+            'kategori'  => 'investasi',
+            'deskripsi' => 'Penjualan investasi: ' . ($row['nama'] ?? $row['deskripsi']),
             'jumlah'    => $nilai,
         ]);
-
-        return redirect()->to('/investasi')->with('message', 'Investasi berhasil dijual.');
     }
 
-    // ======================
-    // 🗑️ HAPUS INVESTASI
-    // ======================
-    public function delete($id)
-    {
-        $uid = $this->uid();
-        $row = $this->investasi->where(['user_id' => $uid, 'id' => $id])->first();
-        if (!$row) {
-            return redirect()->back()->with('error', 'Data tidak ditemukan.');
-        }
+    return redirect()->to('/investasi')->with('message', 'Investasi berhasil dijual.');
+}
 
-        $this->investasi->delete($id);
-        return redirect()->to('/investasi')->with('message', 'Data investasi dihapus.');
+
+// =======================
+// 🗑️ HAPUS INVESTASI
+// =======================
+public function delete($id)
+{
+    $uid = $this->uid();
+
+    // 1️⃣ Coba cari di tabel investasi dulu
+    $row = $this->investasi
+        ->where(['user_id' => $uid, 'id' => $id])
+        ->first();
+
+    // 2️⃣ Kalau tidak ketemu, coba cari di kekayaan awal (kategori investasi)
+    if (!$row) {
+        $row = $this->kekayaan
+            ->where('user_id', $uid)
+            ->where('kategori', 'investasi')
+            ->groupStart()
+                ->where('id', $id)
+                ->orWhere('deskripsi LIKE', '%(Terjual)%')
+            ->groupEnd()
+            ->first();
     }
+
+    // 3️⃣ Kalau tetap tidak ditemukan
+    if (!$row) {
+        return redirect()->back()->with('error', 'Data tidak ditemukan.');
+    }
+
+    // 4️⃣ Hapus berdasarkan sumber data
+    if (isset($row['status'])) {
+        // Dari tabel investasi
+        $this->investasi->delete($row['id']);
+    } else {
+        // Dari kekayaan awal
+        $this->kekayaan->delete($row['id']);
+    }
+
+    return redirect()->to('/investasi')->with('message', 'Data investasi berhasil dihapus.');
+}
+
 
     public function getTotalInvestasi()
 {
