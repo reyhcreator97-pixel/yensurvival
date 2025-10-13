@@ -6,5 +6,14 @@ class PiutangModel extends Model
 {
     protected $table = 'piutang';
     protected $primaryKey = 'id';
-    protected $allowedFields = ['user_id','nama','jumlah','dibayar','akun_id','keterangan'];
+    protected $allowedFields = [
+        'user_id',
+        'akun_id',
+        'tanggal',
+        'nama',
+        'keterangan',
+        'jumlah',
+        'dibayar',
+        'status'
+    ];
 }
