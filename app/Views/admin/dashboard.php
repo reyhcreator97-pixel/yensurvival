@@ -1,6 +1,6 @@
-<?= $this->extend('templates/index'); ?>
+<?= $this->extend('templates/admin/index'); ?>
 
-<?= $this->section('page-content'); ?>
+<?= $this->section('page-content-admin'); ?>
 <div class="container-fluid">
 
 <!-- Page Heading -->
