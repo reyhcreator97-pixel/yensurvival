@@ -84,16 +84,16 @@
 
             <!-- Nav Item - Catat Investasi -->
             <li class="nav-item">
-              <a class="nav-link" href="<?= base_url('user/dashboard'); ?>">
+              <a class="nav-link" href="<?= base_url('investasi'); ?>">
               <i class="fas fa-university"></i>
              <span>Catatan Investasi</span></a>
             </li>
 
             <!-- Nav Item - Jual Beli Barang -->
             <li class="nav-item">
-    <a class="nav-link" href="<?= base_url('user/dashboard'); ?>">
+    <a class="nav-link" href="<?= base_url('aset'); ?>">
     <i class="fas fa-shopping-bag"></i>
-        <span>Jual Beli Barang</span></a>
+        <span>Catatan Aset</span></a>
             </li>
 
             <!-- Nav Item - Dream Tracker -->
@@ -113,7 +113,7 @@
 
                <!-- Nav Item - Catat Utang -->
             <li class="nav-item">
-            <a class="nav-link" href="<?= base_url('user/dashboard'); ?>">
+            <a class="nav-link" href="<?= base_url('utang'); ?>">
             <i class="fas fa-book"></i>
              <span>Catatan Utang</span></a>
             </li>
@@ -128,7 +128,7 @@
 
                <!-- Nav Item - Catat Utang -->
             <li class="nav-item">
-            <a class="nav-link" href="<?= base_url('user/dashboard'); ?>">
+            <a class="nav-link" href="<?= base_url('piutang'); ?>">
             <i class="fas fa-book"></i>
              <span>Catatan Piutang</span></a>
             </li>
