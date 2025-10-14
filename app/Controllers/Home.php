@@ -1,12 +1,18 @@
 <?php
 
 namespace App\Controllers;
-
+helper('auth');
 class Home extends BaseController
 {
-    public function index(): string
+    public function index()
     {
-        return view('auth/login');
+        if (!logged_in()) {
+            return redirect()->to('auth/login');
+        }
+        if (in_groups('Admin')) {
+            return redirect()->to('/admin/index');
+        }
+        return redirect()->to('/user/index');
     }
     public function register(): string
     {
