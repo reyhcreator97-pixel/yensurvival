@@ -1,22 +1,35 @@
 <?php
 
-namespace App\Controllers;
+namespace App\Controllers\Admin;
+
+use App\Controllers\BaseController;
+use App\Models\UserModel;
+use App\Models\SubscriptionModel;
+use App\Models\TransaksiModel;
 
 class Dashboard extends BaseController
 {
+    protected $userModel;
+    protected $subModel;
+    protected $trxModel;
 
-    public function dashboard(): string
+    public function __construct()
     {
-         // --- Ambil data harga 1 gram dari IndoGold ---
-         $indogold = new \App\Controllers\EmasIndogold();
-         $json = $indogold->getHarga1Gram(); // fungsi khusus yang kita bikin di bawah
-         
+        $this->userModel = new UserModel();
+        $this->subModel  = new SubscriptionModel();
+        $this->trxModel  = new TransaksiModel();
+    }
+
+    public function index()
+    {
+        // Dummy data dulu, nanti real dari DB
         $data = [
-            'title'   => 'Dashboard',
-            'harga1g' => $json,  // harga 1 gram (Antam & UBS)
+            'title' => 'Dashboard Admin',
+            'totalUser' => $this->userModel->countAllResults(),
+            'totalSub'  => $this->subModel->countAllResults(),
+            'totalTrx'  => $this->trxModel->countAllResults(),
         ];
+
         return view('admin/dashboard', $data);
     }
-  
- 
 }

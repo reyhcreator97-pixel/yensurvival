@@ -83,6 +83,20 @@ $routes->group('transaksi', ['filter' => 'login'], static function($routes){
 $routes->get('/emas-indogold', 'EmasIndogold::index');
 $routes->get('/kurs', 'KursDcom::index');
 
-$routes->get('/admin', 'Admin::index', ['filter' => 'role:Admin']);
-$routes->get('/admin/index', 'Admin::index', ['filter' => 'role:Admin']);
-$routes->get('/admin/dashboard', 'Admin::dashboard', ['filter' => 'role:Admin']);
+// ===============================
+// 📦 ADMIN ROUTES
+// ===============================
+$routes->group('admin', ['filter' => 'role:Admin'], function($routes){
+$routes->get('/', 'Admin::index');
+$routes->get('index', 'Admin::index');
+$routes->get('dashboard', 'Admin::dashboard');
+
+// --- menu user
+$routes->get('users', 'admin\Users::index');
+$routes->get('users/suspend/(:num)', 'admin\Users::suspend/$1');
+$routes->get('users/activate/(:num)', 'admin\Users::activate/$1');
+$routes->get('users/resetPassword/(:num)', 'admin\Users::resetPassword/$1');
+$routes->get('users/delete/(:num)', 'admin\Users ::delete/$1');
+});
+
+

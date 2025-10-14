@@ -29,9 +29,9 @@
 
             <!-- Nav Item - User List -->
             <li class="nav-item">
-                <a class="nav-link" href="<?= base_url('admin'); ?>">
+                <a class="nav-link" href="<?= base_url('admin/users'); ?>">
                     <i class="fas fa-fw fa-users"></i>
-                    <span>User</span></a>
+                    <span>Users</span></a>
             </li>
             <!-- Nav Item - User List -->
             <li class="nav-item">
