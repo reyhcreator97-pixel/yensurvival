@@ -96,7 +96,7 @@ $routes->get('users', 'admin\Users::index');
 $routes->get('users/suspend/(:num)', 'admin\Users::suspend/$1');
 $routes->get('users/activate/(:num)', 'admin\Users::activate/$1');
 $routes->get('users/resetPassword/(:num)', 'admin\Users::resetPassword/$1');
-$routes->get('users/delete/(:num)', 'admin\Users ::delete/$1');
+$routes->get('users/delete/(:num)', 'admin\Users::delete/$1');
 });
 
 

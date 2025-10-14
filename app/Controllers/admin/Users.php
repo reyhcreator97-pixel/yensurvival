@@ -4,6 +4,7 @@ namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
 use App\Models\UsersModel;
+use Myth\Auth\Password;
 
 class Users extends BaseController
 {
@@ -96,9 +97,11 @@ class Users extends BaseController
     // ✅ Reset password (opsional)
     public function resetPassword($id)
     {
-        $newPass = 'User' . rand(1000, 9999); // contoh random
+        $newPass = 'user' . rand(1000, 9999); // contoh random
+        $hash = \Myth\Auth\Password::hash($newPass); // hash yang di sesuaikan dengan format myth auth
+
         $this->userModel->update($id, [
-            'password_hash' => password_hash($newPass, PASSWORD_DEFAULT)
+            'password_hash' => $hash
         ]);
 
         return redirect()->to('/admin/users')->with(
