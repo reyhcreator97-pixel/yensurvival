@@ -1,15 +1,81 @@
 <?php
+namespace App\Controllers\Admin;
 
-namespace App\Controllers;
+use App\Controllers\BaseController;
+use App\Models\SubscriptionModel;
+use App\Models\UsersModel;
 
-class Susbcription extends BaseController
+class Subscription extends BaseController
 {
-    public function index(): string
+    protected $subs;
+    protected $users;
+
+    public function __construct()
     {
-        $data['title']='Subscription';
+        $this->subs  = new SubscriptionModel();
+        $this->users = new UsersModel();
+    }
+
+    public function index()
+    {
+        $data['title'] = 'Kelola Subscription';
+        $data['subs']  = $this->subs
+            ->select('subscriptions.*, users.username, users.email')
+            ->join('users', 'users.id = subscriptions.user_id', 'left')
+            ->orderBy('subscriptions.id', 'DESC')
+            ->findAll();
+
         return view('admin/subscription', $data);
     }
 
-  
- 
+    public function edit($id)
+    {
+        $sub = $this->subs->find($id);
+        if (!$sub) {
+            return redirect()->back()->with('error', 'Data tidak ditemukan.');
+        }
+
+        $data = [
+            'title' => 'Edit Subscription',
+            'sub'   => $sub
+        ];
+
+        return view('admin/subscription_edit', $data);
+    }
+
+    public function update($id)
+    {
+        $sub = $this->subs->find($id);
+        if (!$sub) {
+            return redirect()->back()->with('error', 'Data tidak ditemukan.');
+        }
+
+        $data = [
+            'plan_type' => $this->request->getPost('plan_type'),
+            'status'    => $this->request->getPost('status'),
+            'end_date'  => $this->request->getPost('end_date'),
+            'updated_at'=> date('Y-m-d H:i:s')
+        ];
+
+        $this->subs->update($id, $data);
+        return redirect()->to('/admin/subscription')->with('message', 'Subscription berhasil diperbarui.');
+    }
+
+    public function activate($id)
+    {
+        $this->subs->update($id, [
+            'status' => 'active',
+            'updated_at' => date('Y-m-d H:i:s')
+        ]);
+        return redirect()->back()->with('message', 'Subscription diaktifkan.');
+    }
+
+    public function cancel($id)
+    {
+        $this->subs->update($id, [
+            'status' => 'canceled',
+            'updated_at' => date('Y-m-d H:i:s')
+        ]);
+        return redirect()->back()->with('message', 'Subscription dibatalkan.');
+    }
 }

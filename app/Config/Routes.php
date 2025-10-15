@@ -91,12 +91,28 @@ $routes->get('/', 'Admin::index');
 $routes->get('index', 'Admin::index');
 $routes->get('dashboard', 'Admin::dashboard');
 
-// --- menu user
+// =========================
+// 🔹 ADMIN - USERS
+// =========================
 $routes->get('users', 'admin\Users::index');
 $routes->get('users/suspend/(:num)', 'admin\Users::suspend/$1');
 $routes->get('users/activate/(:num)', 'admin\Users::activate/$1');
 $routes->get('users/resetPassword/(:num)', 'admin\Users::resetPassword/$1');
 $routes->get('users/delete/(:num)', 'admin\Users::delete/$1');
+
+// =========================
+// 🔹 ADMIN - SUBSCRIPTION
+// =========================
+    $routes->get('subscription', 'admin\Subscription::index');
+    $routes->get('subscription/add', 'admin\Subscription::add');
+    $routes->post('subscription/create', 'admin\Subscription::create');
+    $routes->get('subscription/edit/(:num)', 'admin\Subscription::edit/$1');
+    $routes->post('subscription/update/(:num)', 'admin\Subscription::update/$1');
+    $routes->get('subscription/delete/(:num)', 'admin\Subscription::delete/$1');
+
+    $routes->get('subscription/activate/(:num)', 'admin\Subscription::activate/$1');
+    $routes->get('subscription/cancel/(:num)', 'admin\Subscription::cancel/$1');
+    $routes->get('subscription/extend/(:num)', 'admin\Subscription::extend/$1');
+
+
 });
-
-
