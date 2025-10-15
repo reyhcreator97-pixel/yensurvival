@@ -89,7 +89,7 @@ $routes->get('/kurs', 'KursDcom::index');
 $routes->group('admin', ['filter' => 'role:Admin'], function($routes){
 $routes->get('/', 'Admin::index');
 $routes->get('index', 'Admin::index');
-$routes->get('dashboard', 'Admin::dashboard');
+$routes->get('dashboard', 'admin\Dashboard::index');
 
 // =========================
 // 🔹 ADMIN - USERS
@@ -114,5 +114,16 @@ $routes->get('users/delete/(:num)', 'admin\Users::delete/$1');
     $routes->get('subscription/cancel/(:num)', 'admin\Subscription::cancel/$1');
     $routes->get('subscription/extend/(:num)', 'admin\Subscription::extend/$1');
 
+// =========================
+// 🔹 ADMIN - TRANSAKSI
+// =========================
+    $routes->get('transaksi', 'admin\Transaksi::index');
+
+// =========================
+// 🔹 ADMIN - SETTINGS
+// =========================
+    $routes->get('settings', 'admin\Settings::index');
+    $routes->post('settings/save', 'admin\Settings::save');
+    $routes->get('settings/backup', 'admin\Settings::backup');
 
 });

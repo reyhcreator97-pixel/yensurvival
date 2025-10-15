@@ -45,7 +45,7 @@
 
             <!-- Nav Item - Dashboard -->
             <li class="nav-item">
-             <a class="nav-link" href="<?= base_url('admin/dashboard'); ?>">
+             <a class="nav-link" href="<?= base_url('admin/transaksi'); ?>">
              <i class="fas fa-fw fa-tachometer-alt"></i>
              <span>Transaksi</span></a>
             </li>
@@ -55,9 +55,9 @@
 
             <!-- Nav Item - Dashboard -->
             <li class="nav-item">
-             <a class="nav-link" href="<?= base_url('admin/dashboard'); ?>">
+             <a class="nav-link" href="<?= base_url('admin/settings'); ?>">
              <i class="fas fa-fw fa-tachometer-alt"></i>
-             <span>Setting</span></a>
+             <span>Settings</span></a>
             </li>
 
              <!-- Divider -->

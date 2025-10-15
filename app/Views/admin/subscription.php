@@ -12,25 +12,28 @@
     <div class="alert alert-danger"><?= esc(session('error')) ?></div>
   <?php endif; ?>
 
-  <div class="card shadow-sm">
+  <div class="card shadow mb-4">
+    <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center py-3">
+      <h6 class="m-0 font-weight-bold text-primary">Details Users</h6>
+    </div>
     <div class="card-body">
       <div class="table-responsive">
         <table class="table table-bordered table-sm table-hover">
           <thead class="thead-light">
             <tr>
-              <th>User</th>
-              <th>Plan</th>
-              <th>Status</th>
-              <th>Start</th>
-              <th>End</th>
-              <th class="text-right">Aksi</th>
+              <th class="text-center">User</th>
+              <th class="text-center">Plan</th>
+              <th class="text-center">Status</th>
+              <th class="text-center">Start</th>
+              <th class="text-center">End</th>
+              <th class="text-center">Aksi</th>
             </tr>
           </thead>
           <tbody>
             <?php if (empty($subs)): ?>
               <tr><td colspan="6" class="text-center text-muted">Belum ada data subscription.</td></tr>
             <?php else: foreach ($subs as $r): ?>
-              <tr>
+              <tr class="text-center">
                 <td><?= esc($r['username']) ?> <br><small><?= esc($r['email']) ?></small></td>
                 <td><?= ucfirst($r['plan_type']) ?></td>
                 <td>
@@ -44,7 +47,7 @@
                 </td>
                 <td><?= esc($r['start_date']) ?></td>
                 <td><?= esc($r['end_date']) ?></td>
-                <td class="text-right">
+                <td>
                   <a href="<?= site_url('admin/subscription/edit/'.$r['id']) ?>" class="btn btn-sm btn-primary">
                     <i class="fas fa-edit"></i> Edit
                   </a>

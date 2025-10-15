@@ -1,35 +1,49 @@
 <?php
-
 namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
-use App\Models\UserModel;
+use App\Models\UsersModel;
 use App\Models\SubscriptionModel;
 use App\Models\TransaksiModel;
 
 class Dashboard extends BaseController
 {
-    protected $userModel;
-    protected $subModel;
-    protected $trxModel;
+    protected $users;
+    protected $subs;
+    protected $trx;
 
     public function __construct()
     {
-        $this->userModel = new UserModel();
-        $this->subModel  = new SubscriptionModel();
-        $this->trxModel  = new TransaksiModel();
+        $this->users = new UsersModel();
+        $this->subs  = new SubscriptionModel();
+        $this->trx   = new TransaksiModel();
     }
 
     public function index()
     {
-        // Dummy data dulu, nanti real dari DB
+        // ✅ Tambah logika agar semua variable pasti dikirim
         $data = [
-            'title' => 'Dashboard Admin',
-            'totalUser' => $this->userModel->countAllResults(),
-            'totalSub'  => $this->subModel->countAllResults(),
-            'totalTrx'  => $this->trxModel->countAllResults(),
+            'title' => 'Admin Dashboard',
+            'total_users' => $this->users->countAllResults(),
+            'active_subscriptions' => $this->subs->where('status', 'active')->countAllResults(),
+            'expired_subscriptions' => $this->subs->where('status', 'expired')->countAllResults(),
+            'total_income' => 0,
+            'latest_subs' => []
         ];
 
+        // Hitung income
+        $income = $this->trx->selectSum('jumlah')->where('jenis', 'in')->get()->getRow('jumlah');
+        $data['total_income'] = $income ?? 0;
+
+        // Ambil data 5 subscription terakhir
+        $data['latest_subs'] = $this->subs
+            ->select('subscriptions.*, users.username, users.email')
+            ->join('users', 'users.id = subscriptions.user_id', 'left')
+            ->orderBy('subscriptions.created_at', 'DESC')
+            ->limit(5)
+            ->findAll();
+
+        // ✅ Pasti kirim semua data ke view
         return view('admin/dashboard', $data);
     }
 }

@@ -59,21 +59,21 @@
       <div class="table-responsive">
         <table class="table table-sm table-hover table-bordered">
           <thead class="thead-light">
-            <tr>
+            <tr class="text-center">
               <th>ID</th>
               <th>Username</th>
               <th>Email</th>
               <th>Status</th>
               <th>Dibuat</th>
               <th>Terakhir Update</th>
-              <th class="text-center">Aksi</th>
+              <th>Aksi</th>
             </tr>
           </thead>
           <tbody>
             <?php if (empty($list)): ?>
               <tr><td colspan="7" class="text-center text-muted">Tidak ada data pengguna ditemukan.</td></tr>
             <?php else: foreach ($list as $r): ?>
-              <tr>
+              <tr class="text-center">
                 <td><?= esc($r['id']) ?></td>
                 <td><?= esc($r['username']) ?></td>
                 <td><?= esc($r['email']) ?></td>
@@ -84,9 +84,9 @@
                     <span class="badge badge-danger">Suspend</span>
                   <?php endif; ?>
                 </td>
-                <td><?= esc(date('Y-m-d', strtotime($r['created_at']))) ?></td>
-                <td><?= esc(date('Y-m-d', strtotime($r['updated_at']))) ?></td>
-                <td class="text-center">
+                <td ><?= esc(date('Y-m-d', strtotime($r['created_at']))) ?></td>
+                <td ><?= esc(date('Y-m-d', strtotime($r['updated_at']))) ?></td>
+                <td >
                   <?php if ($r['active']): ?>
                     <a href="<?= site_url('admin/users/suspend/'.$r['id']) ?>"
                        class="btn btn-sm btn-warning"
