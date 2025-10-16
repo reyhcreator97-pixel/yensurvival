@@ -10,7 +10,7 @@ class Home extends BaseController
             return redirect()->to('auth/login');
         }
         if (in_groups('Admin')) {
-            return redirect()->to('/admin/index');
+            return redirect()->to('/admin/dashboard');
         }
         return redirect()->to('/user/index');
     }

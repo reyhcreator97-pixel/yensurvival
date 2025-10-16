@@ -65,7 +65,7 @@
 
             <!-- Nav Item - Dashboard -->
             <li class="nav-item">
-             <a class="nav-link" href="<?= base_url('admin/dashboard'); ?>">
+             <a class="nav-link" href="<?= base_url('admin/logs'); ?>">
              <i class="fas fa-fw fa-tachometer-alt"></i>
              <span>Log</span></a>
             </li>

@@ -126,4 +126,9 @@ $routes->get('users/delete/(:num)', 'admin\Users::delete/$1');
     $routes->post('settings/save', 'admin\Settings::save');
     $routes->get('settings/backup', 'admin\Settings::backup');
 
+// =========================
+// 🔹 ADMIN - Log
+// =========================
+    $routes->get('logs', 'admin\Logs::index');
+
 });

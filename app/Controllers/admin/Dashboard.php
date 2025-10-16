@@ -21,6 +21,7 @@ class Dashboard extends BaseController
 
     public function index()
     {
+        // log_activity('Login', 'Admin login ke dashboard');
         // ✅ Tambah logika agar semua variable pasti dikirim
         $data = [
             'title' => 'Admin Dashboard',

@@ -91,6 +91,7 @@ class Users extends BaseController
         }
 
         $this->userModel->delete($id);
+        log_activity('Delete User', 'Admin menghapus user ID');
         return redirect()->to('/admin/users')->with('message', 'User berhasil dihapus.');
     }
 
