@@ -53,3 +53,5 @@ Events::on('pre_system', static function () {
         }
     }
 });
+
+require APPPATH . 'Events/AuthEvents.php';

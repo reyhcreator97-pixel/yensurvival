@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
@@ -12,15 +13,25 @@ class Logs extends BaseController
 
     public function __construct()
     {
-        $this->log = new LogModel();
+        $this->log  = new LogModel();
         $this->user = new UserModel();
     }
 
     public function index()
     {
+        // Pagination setup
+        $perPage = 10;
+        $page = $this->request->getVar('page_logs') ?? 1;
+
+        // Ambil data log urut terbaru
+        $logs = $this->log
+            ->orderBy('created_at', 'DESC')
+            ->paginate($perPage, 'logs');
+
         $data = [
             'title' => 'Log Aktivitas',
-            'logs'  => $this->log->orderBy('created_at', 'DESC')->findAll(100) // tampilkan 100 terakhir
+            'logs'  => $logs,
+            'pager' => $this->log->pager
         ];
 
         return view('admin/logs', $data);
