@@ -52,14 +52,31 @@
         </div>
       </div>
 
-      <div class="card-footer bg-light border-top d-flex justify-content-between">
-        <button type="submit" class="btn btn-primary px-4">
-          <i class="fas fa-save mr-1"></i> Simpan Pengaturan
-        </button>
-        <a href="<?= site_url('admin/settings/backup') ?>" class="btn btn-primary px-4">
-          <i class="fas fa-hdd mr-1"></i> Backup Sekarang
-        </a>
+      <div class="card-footer bg-light border-top">
+        <div class="d-flex justify-content-between align-items-center flex-wrap">
+          <div class="text-muted small mb-2 mb-md-0">
+            <?php if (!empty($latestBackup)): ?>
+              <i class="fas fa-clock text-primary"></i> Backup terakhir: 
+              <span class="font-weight-bold text-dark"><?= esc($latestBackup) ?></span>
+            <?php else: ?>
+              <i class="fas fa-exclamation-circle text-warning"></i> Belum ada backup.
+            <?php endif; ?>
+          </div>
+
+          <div class="d-flex">
+            <button type="submit" class="btn btn-primary px-4 mr-2">
+              <i class="fas fa-save mr-1"></i> Simpan Pengaturan
+            </button>
+            <a href="<?= site_url('admin/settings/backup') ?>" class="btn btn-primary px-4 mr-2">
+              <i class="fas fa-hdd mr-1"></i> Backup Sekarang
+            </a>
+            <a href="<?= site_url('admin/settings/download') ?>" class="btn btn-success px-4">
+              <i class="fas fa-download mr-1"></i> Download Backup Terakhir
+            </a>
+          </div>
+        </div>
       </div>
+
     </form>
   </div>
 

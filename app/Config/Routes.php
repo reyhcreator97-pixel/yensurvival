@@ -120,11 +120,23 @@ $routes->get('users/delete/(:num)', 'admin\Users::delete/$1');
     $routes->get('transaksi', 'admin\Transaksi::index');
 
 // =========================
-// 🔹 ADMIN - SETTINGS
+// 🔹 ADMIN - SETTINGS ROUTES
 // =========================
+    
+    // Halaman utama pengaturan
     $routes->get('settings', 'admin\Settings::index');
+    
+    // Simpan perubahan pengaturan
     $routes->post('settings/save', 'admin\Settings::save');
+    
+    // Buat backup manual
     $routes->get('settings/backup', 'admin\Settings::backup');
+    
+    // Download backup terbaru
+    $routes->get('settings/download', 'admin\Settings::downloadBackup');
+
+    // Auto backup route
+    $routes->get('settings/auto-backup', 'admin\Settings::autoBackup');
 
 // =========================
 // 🔹 ADMIN - Log

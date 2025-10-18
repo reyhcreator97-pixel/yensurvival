@@ -29,7 +29,7 @@
 
     <div class="col-md-2 mb-2">
       <button type="submit" class="btn btn-primary btn-block">
-        <i class="fas fa-filter"></i> Terapkan
+        <i class="fas fa-search"></i> Filter
       </button>
     </div>
 
