@@ -67,6 +67,7 @@ class Users extends BaseController
         }
 
         $this->userModel->update($id, ['active' => 0]);
+        log_activity('Suspend User', "Admin men-suspend user dengan ID: {$id}");
         return redirect()->to('/admin/users')->with('message', 'User berhasil disuspend.');
     }
 
@@ -79,6 +80,7 @@ class Users extends BaseController
         }
 
         $this->userModel->update($id, ['active' => 1]);
+        log_activity('Aktif User', "Admin men-aktifkan user dengan ID: {$id}");
         return redirect()->to('/admin/users')->with('message', 'User berhasil diaktifkan kembali.');
     }
 
@@ -91,7 +93,7 @@ class Users extends BaseController
         }
 
         $this->userModel->delete($id);
-        log_activity('Delete User', 'Admin menghapus user ID');
+        log_activity('Hapus User', "Admin men-hapus user dengan ID: {$id}");
         return redirect()->to('/admin/users')->with('message', 'User berhasil dihapus.');
     }
 
@@ -105,6 +107,7 @@ class Users extends BaseController
             'password_hash' => $hash
         ]);
 
+        log_activity('Reset Password', "Admin men-reset password user dengan ID: {$id} dengan password : {$newPass}");
         return redirect()->to('/admin/users')->with(
             'message',
             "Password user ID {$id} berhasil direset menjadi: <strong>{$newPass}</strong>"
