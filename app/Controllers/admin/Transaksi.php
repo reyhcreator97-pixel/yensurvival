@@ -18,44 +18,53 @@ class Transaksi extends BaseController
 
     public function index()
     {
-        $keyword  = $this->request->getGet('keyword');
-        $kategori = $this->request->getGet('kategori');
-        $tanggal  = $this->request->getGet('tanggal');
-
-        // Pagination setup
-        $perPage = 10;
-        $page    = $this->request->getVar('page_transaksi') ?? 1;
-
-        $builder = $this->transaksiModel->select('transaksi.*, users.username, users.email')
-            ->join('users', 'users.id = transaksi.user_id', 'left')
-            ->orderBy('transaksi.tanggal', 'DESC');
-
+        $keyword   = $this->request->getGet('keyword');
+        $kategori  = $this->request->getGet('kategori');
+        $tanggal   = $this->request->getGet('tanggal');
+        $perPage   = 10;
+    
+        $builder = $this->transaksiModel
+            ->select('transaksi.*, COALESCE(users.username, "-") AS username, COALESCE(users.email, "-") AS email')
+            ->join('users', 'users.id = transaksi.user_id', 'left');
+    
         if ($keyword) {
             $builder->groupStart()
-                    ->like('users.username', $keyword)
-                    ->orLike('users.email', $keyword)
-                    ->orLike('transaksi.deskripsi', $keyword)
-                    ->groupEnd();
+                ->like('users.username', $keyword)
+                ->orLike('users.email', $keyword)
+                ->orLike('transaksi.deskripsi', $keyword)
+                ->groupEnd();
         }
-
+    
         if ($kategori) {
             $builder->where('transaksi.kategori', $kategori);
         }
-
+    
         if ($tanggal) {
             $builder->where('transaksi.tanggal', $tanggal);
         }
-
+    
+        // ⬇ Tambahin ini biar pagination start dari data terbaru
+        $builder->orderBy('transaksi.tanggal', 'DESC')
+                ->orderBy('transaksi.id', 'DESC');
+    
+        // Ambil data dengan pagination (tetap sama)
+        $list = $builder->paginate($perPage, 'transaksi');
+    
+        // Urut ulang manual biar aman (kalau paginate kadang ngereset)
+        usort($list, function($a, $b) {
+            return strtotime($b['tanggal']) <=> strtotime($a['tanggal']);
+        });
+    
         $data = [
-            'title'        => 'Daftar Transaksi',
-            'list'         => $builder->paginate($perPage, 'transaksi'),
-            'pager'        => $this->transaksiModel->pager,
-            'kategoriList' => $this->transaksiModel->select('kategori')->distinct()->findAll(),
-            'keyword'      => $keyword,
-            'kategori'     => $kategori,
-            'tanggal'      => $tanggal
+            'title'         => 'Daftar Transaksi',
+            'list'          => $list,
+            'pager'         => $this->transaksiModel->pager,
+            'kategoriList'  => $this->transaksiModel->select('kategori')->distinct()->findAll(),
+            'keyword'       => $keyword,
+            'kategori'      => $kategori,
+            'tanggal'       => $tanggal,
         ];
-
+    
         return view('admin/transaksi', $data);
     }
 

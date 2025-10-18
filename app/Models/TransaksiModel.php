@@ -33,6 +33,7 @@ class TransaksiModel extends Model
      * Catatan: desain sederhana — kita cuma apply delta saat insert transaksi.
      * Kalau mau full-akurat (edit/hapus transaksi), tambahin rollback di beforeDelete/afterUpdate.
      */
+
     public function updateSaldo(int $trxId): void
     {
         $trx = $this->find($trxId);
