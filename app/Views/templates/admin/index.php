@@ -20,6 +20,20 @@
     <!-- Custom styles for this template-->
     <link href="<?= base_url(); ?>/css/sb-admin-2.min.css" rel="stylesheet">
 
+    <style>
+.dataTables_wrapper {
+  overflow: visible !important;
+}
+.table-responsive {
+  overflow: visible !important;
+}
+.dataTables_paginate {
+  z-index: 99999 !important;
+  position: relative !important;
+  pointer-events: auto !important;
+}
+</style>
+
 </head>
 
 <body id="page-top">
@@ -93,26 +107,90 @@
         </div>
     </div>
 
-    <!-- Bootstrap core JavaScript-->
-    <script src="<?= base_url(); ?>/vendor/jquery/jquery.min.js"></script>
-    <script src="<?= base_url(); ?>/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+<!-- Bootstrap core JavaScript -->
+<script src="<?= base_url(); ?>/vendor/jquery/jquery.min.js"></script>
+<script src="<?= base_url(); ?>/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
 
-    <!-- Core plugin JavaScript-->
-    <script src="<?= base_url(); ?>/vendor/jquery-easing/jquery.easing.min.js"></script>
+<!-- Core plugin JavaScript -->
+<script src="<?= base_url(); ?>/vendor/jquery-easing/jquery.easing.min.js"></script>
 
-    <!-- Custom scripts for all pages-->
-    <script src="<?= base_url(); ?>/js/sb-admin-2.min.js"></script>
+<!-- Custom scripts for all pages -->
+<script src="<?= base_url(); ?>/js/sb-admin-2.min.js"></script>
 
-    <?= $this->renderSection('scripts'); ?>
+<!-- ✅ DataTables Integration -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap4.min.css">
+<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap4.min.js"></script>
 
-    <?php if(isset($belumIsi) && $belumIsi): ?>
-        <script>
-            $(document).ready(function(){
-                $('#setupModal').modal('show');
-            });
-            </script>
-            <?php endif; ?>
+<!-- ✅ FIX DataTables Pagination + Style -->
+<style>
+  /* Pastikan wrapper-nya terbuka, bukan hidden */
+  .table-responsive, .dataTables_wrapper {
+    overflow: visible !important;
+    position: relative !important;
+    z-index: 1;
+  }
 
+  /* Biar pagination muncul dan bisa diklik */
+  .dataTables_paginate {
+    position: relative !important;
+    z-index: 9999 !important;
+    pointer-events: auto !important;
+    background: #fff !important;
+    padding: 10px 0 !important;
+  }
+
+  /* Style default agar tetap konsisten */
+  .paginate_button {
+    color: #007bff !important;
+    cursor: pointer !important;
+  }
+  .paginate_button.current {
+    background: #007bff !important;
+    color: white !important;
+    border-radius: 4px;
+    padding: 4px 8px;
+  }
+  .paginate_button:hover {
+    background: #e9ecef !important;
+  }
+</style>
+
+<script>
+$(document).ready(function() {
+  console.log("✅ DataTables version:", $.fn.dataTable.version);
+
+  $('.datatable').DataTable({
+    pageLength: 10,
+    lengthChange: true,
+    ordering: true,
+    info: true,
+    autoWidth: false,
+    responsive: true,
+    language: {
+      search: "Cari:",
+      lengthMenu: "Tampilkan MENU data per halaman",
+      info: "Menampilkan START - END dari TOTAL data",
+      infoEmpty: "Tidak ada data",
+      zeroRecords: "Tidak ditemukan data yang cocok",
+      paginate: {
+        previous: "← Sebelumnya",
+        next: "Berikutnya →"
+      }
+    }
+  });
+
+  // Pastikan pagination bisa diklik
+  $('.dataTables_paginate').css('pointer-events', 'auto');
+  $('div.dataTables_paginate a').css('pointer-events', 'auto');
+
+  // Kadang SB Admin 2 render ulang DOM -> kasih delay fix
+  setTimeout(() => {
+    $('div.dataTables_paginate').css('pointer-events', 'auto');
+  }, 800);
+});
+</script>
+
+<?= $this->renderSection('scripts'); ?>
 </body>
-
 </html>

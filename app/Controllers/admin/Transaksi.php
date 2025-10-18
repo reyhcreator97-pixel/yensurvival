@@ -1,72 +1,86 @@
 <?php
-namespace App\Controllers\Admin;
 
+namespace App\Controllers\Admin;
 use App\Controllers\BaseController;
 use App\Models\TransaksiModel;
 use App\Models\UsersModel;
 
 class Transaksi extends BaseController
 {
-    protected $trx;
-    protected $users;
+    protected $transaksiModel;
+    protected $userModel;
 
     public function __construct()
     {
-        $this->trx   = new TransaksiModel();
-        $this->users = new UsersModel();
+        $this->transaksiModel = new TransaksiModel();
+        $this->userModel = new UsersModel();
     }
 
     public function index()
     {
-        $mode  = $this->request->getGet('mode')  ?? 'monthly';  // daily|monthly|yearly
-        $date  = $this->request->getGet('date')  ?? date('Y-m-d');
-        $month = $this->request->getGet('month') ?? date('Y-m');
-        $year  = $this->request->getGet('year')  ?? date('Y');
+        $keyword  = $this->request->getGet('keyword');
+        $kategori = $this->request->getGet('kategori');
+        $tanggal  = $this->request->getGet('tanggal');
 
-        // === Filter builder ===
-        $applyFilter = function($builder) use ($mode, $date, $month, $year) {
-            if ($mode === 'daily') {
-                $builder->where('tanggal', $date);
-            } elseif ($mode === 'monthly') {
-                [$y, $m] = explode('-', $month);
-                $builder->where('YEAR(tanggal)', $y)
-                        ->where('MONTH(tanggal)', $m);
-            } else {
-                $builder->where('YEAR(tanggal)', $year);
-            }
-            return $builder;
-        };
+        // Pagination setup
+        $perPage = 10;
+        $page    = $this->request->getVar('page_transaksi') ?? 1;
 
-        // === Daftar transaksi (gabung dengan user) ===
-        $builder = $this->trx
-            ->select('transaksi.*, users.username, users.email')
+        $builder = $this->transaksiModel->select('transaksi.*, users.username, users.email')
             ->join('users', 'users.id = transaksi.user_id', 'left')
             ->orderBy('transaksi.tanggal', 'DESC');
 
-        $applyFilter($builder);
-        $list = $builder->findAll();
+        if ($keyword) {
+            $builder->groupStart()
+                    ->like('users.username', $keyword)
+                    ->orLike('users.email', $keyword)
+                    ->orLike('transaksi.deskripsi', $keyword)
+                    ->groupEnd();
+        }
 
-        // === Hitung total in/out ===
-        $builderIn = $this->trx->selectSum('jumlah')->where('jenis', 'in');
-        $applyFilter($builderIn);
-        $totalIn = (float)($builderIn->get()->getRow('jumlah') ?? 0);
+        if ($kategori) {
+            $builder->where('transaksi.kategori', $kategori);
+        }
 
-        $builderOut = $this->trx->selectSum('jumlah')->where('jenis', 'out');
-        $applyFilter($builderOut);
-        $totalOut = (float)($builderOut->get()->getRow('jumlah') ?? 0);
+        if ($tanggal) {
+            $builder->where('transaksi.tanggal', $tanggal);
+        }
 
         $data = [
-            'title'     => 'Transaksi Global',
-            'mode'      => $mode,
-            'date'      => $date,
-            'month'     => $month,
-            'year'      => $year,
-            'list'      => $list,
-            'totalIn'   => $totalIn,
-            'totalOut'  => $totalOut,
-            'saldo'     => $totalIn - $totalOut,
+            'title'        => 'Daftar Transaksi',
+            'list'         => $builder->paginate($perPage, 'transaksi'),
+            'pager'        => $this->transaksiModel->pager,
+            'kategoriList' => $this->transaksiModel->select('kategori')->distinct()->findAll(),
+            'keyword'      => $keyword,
+            'kategori'     => $kategori,
+            'tanggal'      => $tanggal
         ];
 
         return view('admin/transaksi', $data);
+    }
+
+    public function export()
+    {
+        $transaksi = $this->transaksiModel
+            ->select('transaksi.*, users.username, users.email')
+            ->join('users', 'users.id = transaksi.user_id', 'left')
+            ->orderBy('transaksi.tanggal', 'DESC')
+            ->findAll();
+
+        header('Content-Type: text/csv');
+        header('Content-Disposition: attachment;filename="transaksi.csv"');
+
+        $output = fopen('php://output', 'w');
+        fputcsv($output, ['Tanggal', 'Username', 'Email', 'Kategori', 'Deskripsi', 'Jumlah', 'Jenis']);
+
+        foreach ($transaksi as $r) {
+            fputcsv($output, [
+                $r['tanggal'], $r['username'], $r['email'],
+                $r['kategori'], $r['deskripsi'], $r['jumlah'], $r['jenis']
+            ]);
+        }
+
+        fclose($output);
+        exit();
     }
 }
