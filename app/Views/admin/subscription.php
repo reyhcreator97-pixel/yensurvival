@@ -5,13 +5,6 @@
     <h4 class="mb-0">Daftar Subscription</h4>
   </div>
 
-  <?php if (session()->getFlashdata('message')): ?>
-    <div class="alert alert-success"><?= esc(session('message')) ?></div>
-  <?php endif; ?>
-  <?php if (session()->getFlashdata('error')): ?>
-    <div class="alert alert-danger"><?= esc(session('error')) ?></div>
-  <?php endif; ?>
-
   <div class="card shadow mb-4">
     <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center py-3">
       <h6 class="m-0 font-weight-bold text-primary">Details Users</h6>
@@ -52,10 +45,16 @@
                     <i class="fas fa-edit"></i> Edit
                   </a>
                   <?php if ($r['status'] != 'active'): ?>
-                    <a href="<?= site_url('admin/subscription/activate/'.$r['id']) ?>" class="btn btn-sm btn-success">Aktifkan</a>
+                    <a href="javascript:void(0)" onclick="confirmActivate('<?= site_url('admin/subscription/activate/'.$r['id']) ?>')" 
+                     class="btn btn-success btn-sm">
+                     <i class="fas fa-user-check"></i> Aktifkan
+                    </a>
                   <?php endif; ?>
                   <?php if ($r['status'] == 'active'): ?>
-                    <a href="<?= site_url('admin/subscription/cancel/'.$r['id']) ?>" class="btn btn-sm btn-danger">Batalkan</a>
+                    <a href="javascript:void(0)" onclick="confirmCancelSub('<?= site_url('admin/subscription/cancel/'.$r['id']) ?>')" 
+                     class="btn btn-danger btn-sm">
+                     <i class="fas fa-times-circle"></i> Batalkan
+                    </a>
                   <?php endif; ?>
                 </td>
               </tr>

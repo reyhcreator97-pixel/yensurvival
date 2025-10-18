@@ -58,6 +58,7 @@ class Subscription extends BaseController
         ];
 
         $this->subs->update($id, $data);
+        log_activity('Subcription Update', "Admin men-update subscription user ID: {$id}");
         return redirect()->to('/admin/subscription')->with('message', 'Subscription berhasil diperbarui.');
     }
 
@@ -67,7 +68,8 @@ class Subscription extends BaseController
             'status' => 'active',
             'updated_at' => date('Y-m-d H:i:s')
         ]);
-        return redirect()->back()->with('message', 'Subscription diaktifkan.');
+        log_activity('Subcription Aktif', "Admin men-aktifkan subscription user ID: {$id}");
+        return redirect()->to('/admin/subscription')->with('message', 'Subscription di aktifkan.');
     }
 
     public function cancel($id)
@@ -76,6 +78,7 @@ class Subscription extends BaseController
             'status' => 'canceled',
             'updated_at' => date('Y-m-d H:i:s')
         ]);
-        return redirect()->back()->with('message', 'Subscription dibatalkan.');
+        log_activity('Subcription Cancel', "Admin men-batalkan subscription user ID: {$id}");
+        return redirect()->to('/admin/subscription')->with('message', 'Subscription di batalkan.');
     }
 }

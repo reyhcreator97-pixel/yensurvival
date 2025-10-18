@@ -8,14 +8,6 @@
     <h1 class="h3 text-gray-800 font-weight-bold">Pengaturan Sistem</h1>
   </div>
 
-  <!-- Flash Message -->
-  <?php if (session()->getFlashdata('message')): ?>
-    <div class="alert alert-success alert-dismissible fade show shadow-sm">
-      <i class="fas fa-check-circle mr-2"></i><?= esc(session('message')) ?>
-      <button type="button" class="close" data-dismiss="alert">&times;</button>
-    </div>
-  <?php endif; ?>
-
   <!-- Card Settings -->
   <div class="card shadow mb-4">
     <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center py-3">

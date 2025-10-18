@@ -191,6 +191,133 @@ $(document).ready(function() {
 });
 </script>
 
+<!-- SweetAlert2-->
+<script src="<?= base_url(); ?>/js/sweetalert2.all.min.js"></script>
+
+<!-- SweetAlert2 -->
+<script src="<?= base_url('vendor/sweetalert2/sweetalert2.all.min.js'); ?>"></script>
+
+<script>
+// ✅ ALERT SUKSES
+<?php if (session()->getFlashdata('message')): ?>
+Swal.fire({
+  icon: 'success',
+  title: 'Berhasil!',
+  html: '<?= (session('message')) ?>',
+  confirmButtonColor: '#3085d6',
+  confirmButtonText: 'Oke',
+  background: '#ffffff',
+});
+<?php endif; ?>
+
+// ❌ ALERT ERROR
+<?php if (session()->getFlashdata('error')): ?>
+Swal.fire({
+  icon: 'error',
+  title: 'Terjadi Kesalahan!',
+  text: '<?= esc(session('error')) ?>',
+  confirmButtonColor: '#d33',
+  confirmButtonText: 'Tutup',
+  background: '#ffffff',
+});
+<?php endif; ?>
+
+// ⚠ KONFIRMASI HAPUS
+function confirmDelete(url) {
+  Swal.fire({
+    title: 'Yakin mau hapus?',
+    text: "Data yang sudah dihapus tidak bisa dikembalikan!",
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonColor: '#d33',
+    cancelButtonColor: '#6c757d',
+    confirmButtonText: 'Ya, hapus!',
+    cancelButtonText: 'Batal',
+    background: '#ffffff'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      window.location.href = url;
+    }
+  });
+}
+
+// 🔄 KONFIRMASI RESET PASSWORD
+function confirmReset(url) {
+  Swal.fire({
+    title: 'Reset Password?',
+    text: "Password user akan direset. Lanjutkan?",
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonColor: '#17a2b8',
+    cancelButtonColor: '#6c757d',
+    confirmButtonText: 'Ya, reset!',
+    cancelButtonText: 'Batal',
+    background: '#ffffff'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      window.location.href = url;
+    }
+  });
+}
+
+// 🚫 KONFIRMASI SUSPEND USER
+function confirmSuspend(url) {
+  Swal.fire({
+    title: 'Suspend User?',
+    text: "User tidak akan bisa login setelah disuspend.",
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#d33',
+    cancelButtonColor: '#6c757d',
+    confirmButtonText: 'Ya, suspend!',
+    cancelButtonText: 'Batal',
+    background: '#ffffff'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      window.location.href = url;
+    }
+  });
+}
+
+// ✅ KONFIRMASI AKTIFKAN USER
+function confirmActivate(url) {
+  Swal.fire({
+    title: 'Aktifkan User?',
+    text: "User akan bisa login kembali setelah diaktifkan.",
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonColor: '#28a745',
+    cancelButtonColor: '#6c757d',
+    confirmButtonText: 'Ya, aktifkan!',
+    cancelButtonText: 'Batal',
+    background: '#ffffff'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      window.location.href = url;
+    }
+  });
+}
+
+// 📉 KONFIRMASI BATALKAN SUBSCRIPTION
+function confirmCancelSub(url) {
+  Swal.fire({
+    title: 'Batalkan Subscription?',
+    text: "User akan kehilangan akses ke fitur premium.",
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#d33',
+    cancelButtonColor: '#6c757d',
+    confirmButtonText: 'Ya, batalkan!',
+    cancelButtonText: 'Batal',
+    background: '#ffffff'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      window.location.href = url;
+    }
+  });
+}
+</script>
+
 <?= $this->renderSection('scripts'); ?>
 </body>
 </html>

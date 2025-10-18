@@ -7,19 +7,6 @@
     <h1 class="h3 mb-0 text-gray-800">Kelola Pengguna</h1>
   </div>
 
-  <!-- Alert -->
-  <?php if (session()->getFlashdata('message')): ?>
-    <div class="alert alert-success alert-dismissible fade show shadow-sm">
-      <?= session('message') ?>
-      <button type="button" class="close" data-dismiss="alert">&times;</button>
-    </div>
-  <?php elseif (session()->getFlashdata('error')): ?>
-    <div class="alert alert-danger alert-dismissible fade show shadow-sm">
-      <?= session('error') ?>
-      <button type="button" class="close" data-dismiss="alert">&times;</button>
-    </div>
-  <?php endif; ?>
-
   <!-- Filter & Search -->
   <form method="get" class="mb-3">
     <div class="form-row align-items-end">
@@ -88,22 +75,26 @@
                 <td ><?= esc(date('Y-m-d', strtotime($r['updated_at']))) ?></td>
                 <td >
                   <?php if ($r['active']): ?>
-                    <a href="<?= site_url('admin/users/suspend/'.$r['id']) ?>"
-                       class="btn btn-sm btn-warning"
-                       onclick="return confirm('Suspend user ini?')">Suspend</a>
+                    <a href="javascript:void(0)" onclick="confirmSuspend('<?= site_url('admin/users/suspend/'.$r['id']) ?>')" 
+                    class="btn btn-warning btn-sm">
+                    <i class="fas fa-user-slash"></i> Suspend
+                    </a>
                   <?php else: ?>
-                    <a href="<?= site_url('admin/users/activate/'.$r['id']) ?>"
-                       class="btn btn-sm btn-success"
-                       onclick="return confirm('Aktifkan user ini?')">Aktifkan</a>
+                    <a href="javascript:void(0)" onclick="confirmActivate('<?= site_url('admin/users/activate/'.$r['id']) ?>')" 
+                    class="btn btn-success btn-sm">
+                    <i class="fas fa-user-check"></i> Aktifkan
+                    </a>
                   <?php endif; ?>
 
-                  <a href="<?= site_url('admin/users/resetPassword/'.$r['id']) ?>"
-                     class="btn btn-sm btn-info"
-                     onclick="return confirm('Reset password user ini?')">Reset</a>
+                  <a href="javascript:void(0)" onclick="confirmReset('<?= site_url('admin/users/resetPassword/'.$r['id']) ?>')" 
+                   class="btn btn-info btn-sm">
+                   <i class="fas fa-key"></i> Reset Password
+                  </a>
 
-                  <a href="<?= site_url('admin/users/delete/'.$r['id']) ?>"
-                     class="btn btn-sm btn-danger"
-                     onclick="return confirm('Hapus user ini?')">Hapus</a>
+                    <a href="javascript:void(0)" 
+                      onclick="confirmDelete('<?= site_url('admin/users/delete/'.$r['id']) ?>')" class="btn btn-danger btn-sm">
+                    <i class="fas fa-trash-alt"></i> Hapus
+                    </a>
                 </td>
               </tr>
             <?php endforeach; endif; ?>
