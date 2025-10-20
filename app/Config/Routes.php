@@ -10,6 +10,7 @@ $routes->get('/user/index', 'User::index');
 $routes->get('/user/dashboard', 'User::dashboard');
 $routes->get('/register', 'Home::register');
 $routes->get('/user', 'Home::user');
+$routes->get('/dream', 'Home::dream');
 
 
 // ===============================

@@ -18,9 +18,19 @@ class Home extends BaseController
     {
         return view('auth/register');
     }
+
     public function user(): string
     {
         return view('user/index');
     }
+
+    public function dream(): string
+    {
+        $data= [
+            'title' => 'Dream Tracker'
+        ];
+        return view('dream/index', $data);
+    }
  
+
 }

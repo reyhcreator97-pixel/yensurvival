@@ -2,7 +2,7 @@
         <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
 
             <!-- Sidebar - Brand -->
-            <a class="sidebar-brand d-flex align-items-center justify-content-center" href="index.html">
+            <a class="sidebar-brand d-flex align-items-center justify-content-center" href="index">
                 <div class="sidebar-brand-icon rotate-n-15">
                     <i class="fas fa-yen-sign"></i>
                 </div>
@@ -64,7 +64,7 @@
 
             <!-- Heading -->
             <div class="sidebar-heading">
-                Keuangan
+                Transaksi
             </div>
 
             <!-- Nav Item - Pages Collapse Menu -->
@@ -98,7 +98,7 @@
 
             <!-- Nav Item - Dream Tracker -->
             <li class="nav-item">
-    <a class="nav-link" href="<?= base_url('user/dashboard'); ?>">
+    <a class="nav-link" href="<?= base_url('dream'); ?>">
         <i class="fas fa-fw fa-tachometer-alt"></i>
         <span>Dream Tracker</span></a>
             </li>
@@ -108,7 +108,7 @@
 
             <!-- Heading -->
             <div class="sidebar-heading">
-               Utang
+               Utang - Piutang
             </div>
 
                <!-- Nav Item - Catat Utang -->
@@ -117,14 +117,6 @@
             <i class="fas fa-book"></i>
              <span>Catatan Utang</span></a>
             </li>
-
-            <!-- Divider -->
-            <hr class="sidebar-divider">
-
-            <!-- Heading -->
-            <div class="sidebar-heading">
-               Piutang
-            </div>
 
                <!-- Nav Item - Catat Utang -->
             <li class="nav-item">
