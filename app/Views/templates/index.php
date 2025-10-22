@@ -103,6 +103,44 @@
     <!-- Custom scripts for all pages-->
     <script src="<?= base_url(); ?>/js/sb-admin-2.min.js"></script>
 
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<?php if (session()->getFlashdata('error')): ?>
+<script>
+Swal.fire({
+    icon: 'error',
+    title: 'Akses Ditolak',
+    text: '<?= esc(session('errorcs')) ?>',
+    confirmButtonColor: '#d33',
+    confirmButtonText: 'Tutup',
+    background: '#ffffff',
+});
+</script>
+<?php endif; ?>
+
+<?php if (session()->getFlashdata('message')): ?>
+<script>
+Swal.fire({
+    icon: 'success',
+    title: 'Berhasil!',
+    text: '<?= esc(session('message')) ?>',
+    confirmButtonColor: '#3085d6',
+});
+</script>
+<?php endif; ?>
+
+<?php if (session()->getFlashdata('error')): ?>
+<script>
+Swal.fire({
+    icon: 'error',
+    title: 'Gagal!',
+    text: '<?= esc(session('error')) ?>',
+    confirmButtonColor: '#d33',
+});
+</script>
+<?php endif; ?>
+
     <?= $this->renderSection('scripts'); ?>
 
     <?php if(isset($belumIsi) && $belumIsi): ?>

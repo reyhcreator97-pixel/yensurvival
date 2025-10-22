@@ -6,17 +6,28 @@ use CodeIgniter\Router\RouteCollection;
  * @var RouteCollection $routes
  */
 $routes->get('/', 'Home::index');
-$routes->get('/user/index', 'User::index');
-$routes->get('/user/dashboard', 'User::dashboard');
+// $routes->get('/user/index', 'User::index');
+// $routes->get('/user/dashboard', 'User::dashboard');
 $routes->get('/register', 'Home::register');
 $routes->get('/user', 'Home::user');
 $routes->get('/dream', 'Home::dream');
+
+// ===============================
+// 📦 ROUTES UNTUK USER
+// ===============================
+$routes->group('user', ['filter' => 'login'], function($routes) {
+    $routes->get('index', 'User::index');
+    $routes->get('dashboard', 'User::dashboard');       
+    $routes->get('panel', 'user\Panel::index');            
+    $routes->post('panel/changePassword', 'user\Panel::changePassword'); 
+});
+
 
 
 // ===============================
 // 📦 ROUTES UNTUK PAGE ASET
 // ===============================
-$routes->group('aset', ['filter' => 'login'], function($routes) {
+$routes->group('aset', ['filter' => 'subscription'], function($routes) {
     $routes->get('/', 'Aset::index');               // Halaman utama daftar aset
     $routes->post('store', 'Aset::store');          // Tambah aset baru
     $routes->post('updateNilai', 'Aset::updateNilai'); // Update nilai sekarang
