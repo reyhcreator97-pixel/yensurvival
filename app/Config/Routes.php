@@ -22,6 +22,15 @@ $routes->group('user', ['filter' => 'login'], function($routes) {
     $routes->post('panel/changePassword', 'user\Panel::changePassword'); 
 });
 
+// ===============================
+// 📦 ROUTES UNTUK PAGE SUBSCRIPTION
+// ===============================
+$routes->group('user', ['filter' => 'login'], function($routes) {
+    $routes->get('subscription', 'User\Subscription::index');
+    $routes->get('subscription/buy/(:segment)', 'User\Subscription::buy/$1');
+    $routes->get('subscription/upgrade', 'User\Subscription::upgrade');
+    $routes->get('subscription/renew', 'User\Subscription::renew');
+});
 
 
 // ===============================

@@ -43,6 +43,17 @@
         <i class="fas fa-fw fa-tachometer-alt"></i>
         <span>Dashboard</span></a>
 </li>
+<li class="nav-item">
+    <a class="nav-link" href="<?= base_url('user/panel'); ?>">
+        <i class="fas fa-fw fa-tachometer-alt"></i>
+        <span>User Panel</span></a>
+</li>
+
+<li class="nav-item">
+    <a class="nav-link" href="<?= base_url('user/subscription'); ?>">
+        <i class="fas fa-fw fa-tachometer-alt"></i>
+        <span>Subscription</span></a>
+</li>
 
             <!-- Divider -->
             <hr class="sidebar-divider">
