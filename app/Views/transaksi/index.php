@@ -20,19 +20,6 @@
     </div>
   </div>
 
-  <?php if (session()->getFlashdata('message')): ?>
-    <div class="alert alert-success alert-dismissible fade show">
-      <?= esc(session('message')) ?>
-      <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
-    </div>
-  <?php endif; ?>
-  <?php if (session()->getFlashdata('error')): ?>
-    <div class="alert alert-danger alert-dismissible fade show">
-      <?= esc(session('error')) ?>
-      <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
-    </div>
-  <?php endif; ?>
-
   <!-- Filter -->
   <div class="card shadow mb-3">
     <div class="card-body">
@@ -131,11 +118,12 @@
                 <td><?= esc($r['deskripsi'] ?? '-') ?></td>
                 <td class="text-right">¥<?= number_format($r['jumlah'],0) ?></td>
                 <td class="text-right">
-                  <form action="<?= site_url('transaksi/delete/'.$r['id']) ?>" method="post" onsubmit="return confirm('Hapus transaksi ini?')">
-                    <?= csrf_field() ?>
-                    <button class="btn btn-xs btn-outline-danger"><i class="fas fa-trash"></i></button>
-                  </form>
-                </td>
+  <button type="button" 
+          class="btn btn-xs btn-outline-danger btn-delete"
+          data-url="<?= site_url('transaksi/delete/' . $r['id']) ?>">
+    <i class="fas fa-trash"></i>
+  </button>
+</td>
               </tr>
             <?php endforeach; endif; ?>
           </tbody>

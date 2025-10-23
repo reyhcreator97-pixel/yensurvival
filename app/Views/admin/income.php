@@ -17,9 +17,10 @@
     <?php endif; ?>
 
     <!-- Filter -->
-    <form method="get" class="form-inline mb-4">
+    <form method="get" class="card shadow-sm border-0 mb-4 p-3 bg-light">
+    <div class="form-row align-items-end">
         <label class="mr-2 font-weight-bold">Filter:</label>
-        <select name="month" class="form-control mr-2">
+        <select name="month" class="form-control col-md-3 mb-2">
             <option value="">Semua Bulan</option>
             <?php for ($m = 1; $m <= 12; $m++): ?>
                 <option value="<?= $m ?>" <?= ($month == $m) ? 'selected' : '' ?>>
@@ -28,15 +29,22 @@
             <?php endfor; ?>
         </select>
 
-        <select name="year" class="form-control mr-2">
+        <select name="year" class="form-control col-md-3 mb-2">
             <option value="">Semua Tahun</option>
             <?php for ($y = date('Y'); $y >= date('Y') - 5; $y--): ?>
                 <option value="<?= $y ?>" <?= ($year == $y) ? 'selected' : '' ?>><?= $y ?></option>
             <?php endfor; ?>
         </select>
-
-        <button type="submit" class="btn btn-primary btn-sm">Terapkan</button>
-        <a href="<?= site_url('admin/income') ?>" class="btn btn-secondary btn-sm ml-2">Reset</a>
+                <div class="col-md-2 mb-2">
+        <button type="submit" class="btn btn-primary btn-block">
+          <i class="fas fa-search"></i> Filter
+        </button></div>
+        <div class="col-md-2 mb-2">
+        <a href="<?= site_url('admin/income') ?>" class="btn btn-outline-secondary btn-block">
+          <i class="fas fa-sync-alt"></i> Reset
+        </a>
+      </div>
+    </div>
     </form>
 
     <!-- Total Income -->

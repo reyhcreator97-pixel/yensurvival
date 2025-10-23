@@ -94,7 +94,7 @@ $routes->group('transaksi', ['filter' => 'login'], static function($routes){
     $routes->get('/',               'Transaksi::index');
     $routes->post('store',          'Transaksi::store');      // pemasukan / pengeluaran
     $routes->post('transfer',       'Transaksi::transfer');   // pindah dana
-    $routes->post('delete/(:num)',  'Transaksi::delete/$1');
+    $routes->get('delete/(:num)',  'Transaksi::delete/$1');
     $routes->post('addAkun',        'Transaksi::addAkun');
 });
 

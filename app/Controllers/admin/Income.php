@@ -34,8 +34,12 @@ class Income extends BaseController
         if ($month && $year) {
             $builder->where('MONTH(transaksi.created_at)', $month)
                     ->where('YEAR(transaksi.created_at)', $year);
-        } elseif ($year) {
+        } 
+        if ($year) {
             $builder->where('YEAR(transaksi.created_at)', $year);
+        }
+        if ($month) {
+            $builder->where('MONTH(transaksi.created_at)', $month);
         }
 
         // Pagination

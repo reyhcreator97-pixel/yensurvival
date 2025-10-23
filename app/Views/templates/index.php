@@ -106,25 +106,51 @@
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-<?php if (session()->getFlashdata('error')): ?>
+    <!-- SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <script>
-Swal.fire({
-    icon: 'error',
-    title: 'Akses Ditolak',
-    text: '<?= esc(session('errorcs')) ?>',
-    confirmButtonColor: '#d33',
-    confirmButtonText: 'Tutup',
-    background: '#ffffff',
+document.addEventListener("DOMContentLoaded", function() {
+
+  // 🔥 Global Alert for Delete Buttons
+  document.querySelectorAll('.btn-delete').forEach(btn => {
+    btn.addEventListener('click', function(e) {
+      e.preventDefault();
+      const url = this.getAttribute('data-url');
+
+      Swal.fire({
+        title: 'Yakin ingin menghapus data ini?',
+        text: "Data yang dihapus tidak bisa dikembalikan!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Ya, Hapus!',
+        cancelButtonText: 'Batal'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          // Optional: tambahin animasi loading sebelum redirect
+          Swal.fire({
+            title: 'Menghapus...',
+            text: 'Mohon tunggu sebentar',
+            allowOutsideClick: false,
+            didOpen: () => Swal.showLoading()
+          });
+          window.location.href = url;
+        }
+      });
+    });
+  });
+
 });
 </script>
-<?php endif; ?>
 
 <?php if (session()->getFlashdata('message')): ?>
 <script>
 Swal.fire({
     icon: 'success',
     title: 'Berhasil!',
-    text: '<?= esc(session('message')) ?>',
+    html: '<?= (session('message')) ?>',
     confirmButtonColor: '#3085d6',
 });
 </script>
@@ -141,6 +167,8 @@ Swal.fire({
 </script>
 <?php endif; ?>
 
+<script>
+
     <?= $this->renderSection('scripts'); ?>
 
     <?php if(isset($belumIsi) && $belumIsi): ?>
@@ -150,6 +178,7 @@ Swal.fire({
             });
             </script>
             <?php endif; ?>
+</script>
 
 </body>
 
