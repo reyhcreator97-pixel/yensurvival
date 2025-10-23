@@ -91,13 +91,11 @@
                     Bayar
                   </button>
                 <?php else: ?>
-                  <form action="<?= site_url('utang/delete/'.$r['id']) ?>" method="post"
-                    class="d-inline" onsubmit="return confirm('Hapus data ini?')">
-                    <?= csrf_field() ?>
-                    <button class="btn btn-sm btn-outline-danger">
-                      Hapus
-                    </button>
-                  </form>
+                  <button type="button" 
+                                      class="btn btn-xs btn-outline-danger btn-delete"
+                                      data-url="<?= site_url('utang/delete/' . $r['id']) ?>">
+                                      <i class="fas fa-trash"></i>
+                                    </button>
                 <?php endif; ?>
               </td>
             </tr>

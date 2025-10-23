@@ -10,21 +10,6 @@
     </button>
   </div>
 
-  <!-- Flash message -->
-  <?php if (session()->getFlashdata('message')): ?>
-    <div class="alert alert-success alert-dismissible fade show shadow-sm">
-      <?= esc(session('message')) ?>
-      <button type="button" class="close" data-dismiss="alert">&times;</button>
-    </div>
-  <?php endif; ?>
-
-  <?php if (session()->getFlashdata('error')): ?>
-    <div class="alert alert-danger alert-dismissible fade show shadow-sm">
-      <?= esc(session('error')) ?>
-      <button type="button" class="close" data-dismiss="alert">&times;</button>
-    </div>
-  <?php endif; ?>
-
   <!-- CARD TOTAL PIUTANG -->
   <div class="row mb-3">
     <div class="col-md-4 mb-3">
@@ -91,13 +76,11 @@
                     Terima
                   </button>
                 <?php else: ?>
-                  <form action="<?= site_url('piutang/delete/'.$r['id']) ?>" method="post"
-                    class="d-inline" onsubmit="return confirm('Hapus data ini?')">
-                    <?= csrf_field() ?>
-                    <button class="btn btn-sm btn-outline-danger">
-                      Hapus
-                    </button>
-                  </form>
+                  <button type="button" 
+                                      class="btn btn-xs btn-outline-danger btn-delete"
+                                      data-url="<?= site_url('piutang/delete/' . $r['id']) ?>">
+                                      <i class="fas fa-trash"></i>
+                                    </button>
                 <?php endif; ?>
               </td>
             </tr>

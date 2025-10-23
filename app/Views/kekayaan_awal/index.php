@@ -10,7 +10,7 @@
         </button>
     </div>
 
-    <?php if (session()->getFlashdata('message')): ?>
+    <!-- <?php if (session()->getFlashdata('message')): ?>
         <div class="alert alert-success alert-dismissible fade show" role="alert">
             <?= esc(session('message')) ?>
             <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
@@ -22,7 +22,7 @@
             <?= esc(session('error')) ?>
             <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
         </div>
-    <?php endif; ?>
+    <?php endif; ?> -->
 
 <!-- RINGKASAN TOTAL (3 atas, 2 bawah, spacing rapi) -->
 <?php
@@ -135,12 +135,11 @@ $cards = [
                                             data-amount="<?= (float)$r['jumlah'] ?>">
                                         <i class="fas fa-edit"></i>
                                     </button>
-                                    <form action="<?= site_url('kekayaan-awal/delete/'.$r['id']) ?>" method="post" class="d-inline" onsubmit="return confirm('Hapus item ini?')">
-                                        <?= csrf_field() ?>
-                                        <button class="btn btn-xs btn-outline-danger">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </form>
+                                    <button type="button" 
+                                      class="btn btn-xs btn-outline-danger btn-delete"
+                                      data-url="<?= site_url('kekayaan-awal/delete/' . $r['id']) ?>">
+                                      <i class="fas fa-trash"></i>
+                                    </button>
                                 </td>
                             </tr>
                             <?php endforeach; ?>

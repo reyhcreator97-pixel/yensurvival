@@ -10,24 +10,6 @@
     </button>
   </div>
 
-  <?php if (session()->getFlashdata('message')): ?>
-    <div class="alert alert-success alert-dismissible fade show">
-      <?= esc(session('message')) ?>
-      <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-        <span aria-hidden="true">&times;</span>
-      </button>
-    </div>
-  <?php endif; ?>
-
-  <?php if (session()->getFlashdata('error')): ?>
-    <div class="alert alert-danger alert-dismissible fade show">
-      <?= esc(session('error')) ?>
-      <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-        <span aria-hidden="true">&times;</span>
-      </button>
-    </div>
-  <?php endif; ?>
-
   <!-- RINGKASAN -->
   <div class="row mb-3">
     <div class="col-md-4 mb-3">
@@ -101,10 +83,11 @@
                   <button class="btn btn-xs btn-info" data-toggle="modal" data-target="#modalUpdate<?= $r['id'] ?>">Update</button>
                   <button class="btn btn-xs btn-warning" data-toggle="modal" data-target="#modalJual<?= $r['id'] ?>">Jual</button>
                 <?php else: ?>
-                  <form action="<?= site_url('investasi/delete/'.$r['id']) ?>" method="post" class="d-inline" onsubmit="return confirm('Hapus data ini?')">
-                    <?= csrf_field() ?>
-                    <button class="btn btn-xs btn-outline-danger">Hapus</button>
-                  </form>
+                  <button type="button" 
+                                      class="btn btn-xs btn-outline-danger btn-delete"
+                                      data-url="<?= site_url('investasi/delete/' . $r['id']) ?>">
+                                      <i class="fas fa-trash"></i>
+                                    </button>
                 <?php endif; ?>
               </td>
             </tr>

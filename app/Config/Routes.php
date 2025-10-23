@@ -12,6 +12,9 @@ $routes->get('/register', 'Home::register');
 $routes->get('/user', 'Home::user');
 $routes->get('/dream', 'Home::dream');
 
+$routes->get('/emas-indogold', 'EmasIndogold::index');
+$routes->get('/kurs', 'KursDcom::index');
+
 // ===============================
 // 📦 ROUTES UNTUK USER
 // ===============================
@@ -41,7 +44,7 @@ $routes->group('aset', ['filter' => 'subscription'], function($routes) {
     $routes->post('store', 'Aset::store');          // Tambah aset baru
     $routes->post('updateNilai', 'Aset::updateNilai'); // Update nilai sekarang
     $routes->post('jual', 'Aset::jual');            // Jual aset
-    $routes->post('delete/(:num)', 'Aset::delete/$1'); // Hapus aset
+    $routes->get('delete/(:num)', 'Aset::delete/$1'); // Hapus aset
 });
 
 
@@ -51,7 +54,7 @@ $routes->group('utang', ['filter' => 'login'], static function($routes) {
     $routes->get('/', 'Utang::index');
     $routes->post('store', 'Utang::store');
     $routes->post('lunas/(:num)', 'Utang::lunas/$1');
-    $routes->post('delete/(:num)', 'Utang::delete/$1');
+    $routes->get('delete/(:num)', 'Utang::delete/$1');
     $routes->post('storePembayaran', 'Utang::storePembayaran'); // ✅ tambahkan ini
 });
 
@@ -60,7 +63,7 @@ $routes->group('piutang', ['filter' => 'login'], static function($routes) {
     $routes->get('/', 'Piutang::index');
     $routes->post('store', 'Piutang::store');
     $routes->post('lunas/(:num)', 'Piutang::lunas/$1');
-    $routes->post('delete/(:num)', 'Piutang::delete/$1');
+    $routes->get('delete/(:num)', 'Piutang::delete/$1');
     $routes->post('storePembayaran', 'Piutang::storePembayaran'); // ✅ tambahkan ini
 });
 
@@ -72,23 +75,27 @@ $routes->group('investasi', ['filter' => 'login'], function($routes) {
     $routes->post('store', 'Investasi::store');              // Tambah investasi baru
     $routes->post('updateNilai', 'Investasi::updateNilai');  // Update nilai sekarang
     $routes->post('jual', 'Investasi::jual');                // Jual investasi
-    $routes->post('delete/(:num)', 'Investasi::delete/$1');   // Hapus investasi
+    $routes->get('delete/(:num)', 'Investasi::delete/$1');   // Hapus investasi
     $routes->get('total', 'Investasi::getTotalInvestasi');
 
 });
 
-
+// =============================
+// 📈 ROUTES: KEKAYAAN AWAL
+// =============================
 
 $routes->group('', static function($routes) {
 
-    // Halaman setup kekayaan awal
     $routes->get ('kekayaan-awal',              'KekayaanAwal::index');
     $routes->post('kekayaan-awal/store',        'KekayaanAwal::store');
     $routes->post('kekayaan-awal/update',       'KekayaanAwal::update');
-    $routes->post ('kekayaan-awal/delete/(:num)', 'KekayaanAwal::delete/$1');
+    $routes->get ('kekayaan-awal/delete/(:num)', 'KekayaanAwal::delete/$1');
 
 });
 
+// =============================
+// 📈 ROUTES: TRANSAKSI
+// =============================
 
 $routes->group('transaksi', ['filter' => 'login'], static function($routes){
     $routes->get('/',               'Transaksi::index');
@@ -99,10 +106,6 @@ $routes->group('transaksi', ['filter' => 'login'], static function($routes){
 });
 
 
-
-
-$routes->get('/emas-indogold', 'EmasIndogold::index');
-$routes->get('/kurs', 'KursDcom::index');
 
 // ===============================
 // 📦 ADMIN ROUTES

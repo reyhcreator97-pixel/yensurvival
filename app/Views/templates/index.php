@@ -167,7 +167,7 @@ Swal.fire({
 </script>
 <?php endif; ?>
 
-<script>
+
 
     <?= $this->renderSection('scripts'); ?>
 
@@ -178,7 +178,7 @@ Swal.fire({
             });
             </script>
             <?php endif; ?>
-</script>
+
 
 </body>
 
