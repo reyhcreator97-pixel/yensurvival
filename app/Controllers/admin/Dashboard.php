@@ -33,8 +33,8 @@ class Dashboard extends BaseController
         ];
 
         // Hitung income
-        $income = $this->trx->selectSum('jumlah')->where('jenis', 'in')->get()->getRow('jumlah');
-        $data['total_income'] = $income ?? 0;
+        $income = $this->trx->selectSum('jumlah')->where('jenis', 'out')->where('kategori','subscription')->get()->getRow('jumlah');
+        $data['totalIncome'] = $income ?? 0;
 
         // Ambil data 5 subscription terakhir
         $data['latest_subs'] = $this->subs

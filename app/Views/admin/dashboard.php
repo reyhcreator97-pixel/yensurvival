@@ -47,7 +47,7 @@
         <div class="card-body">
           <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Total Income</div>
           <div class="h5 mb-0 font-weight-bold text-gray-800">
-            ¥<?= number_format($total_income ?? 0, 0, ',', '.') ?>
+            ¥<?= number_format($totalIncome ?? 0, 0, ',', '.') ?>
           </div>
         </div>
       </div>
