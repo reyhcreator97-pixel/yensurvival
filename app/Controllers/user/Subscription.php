@@ -74,7 +74,7 @@ class Subscription extends BaseController
         // Simpan ke tabel subscription
         $this->subscriptionModel->insert([
             'user_id'    => $userId,
-            'plan'       => $plan,
+            'plan_type'  => $plan,
             'price'      => $price,
             'start_date' => $startDate,
             'end_date'   => $endDate,

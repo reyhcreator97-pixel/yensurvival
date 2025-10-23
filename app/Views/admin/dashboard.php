@@ -84,7 +84,7 @@
                   <td><?= esc($r['email'] ?? '-') ?></td>
                   <td class="text-capitalize text-center"><?= esc($r['plan_type'] ?? '-') ?></td>
                   <td class="text-center">
-                    <span class="badge badge-<?= $r['status']=='active' ? 'success' : ($r['status']=='expired' ? 'danger' : 'secondary') ?>">
+                    <span class="badge badge-<?= $r['status']=='active' ? 'success' : ($r['status']=='expired' ? 'danger' : 'warning') ?>">
                       <?= esc($r['status'] ?? '-') ?>
                     </span>
                   </td>

@@ -36,22 +36,33 @@
             <p><strong>Plan:</strong> <?= ucfirst($subscription['plan_type']) ?></p>
             <p><strong>Mulai:</strong> <?= esc($subscription['start_date']) ?></p>
             <p><strong>Berakhir:</strong> <?= esc($subscription['end_date']) ?></p>
+            
             <p><strong>Status:</strong>
-              <?php if ($isActive): ?>
+              <?php if ($subscription['status'] === 'active'): ?>
                 <span class="badge badge-success">Aktif</span>
+              <?php elseif ($subscription['status'] === 'pending'): ?>
+                <span class="badge badge-warning">Menunggu Konfirmasi Admin</span>
               <?php else: ?>
                 <span class="badge badge-secondary">Tidak Aktif</span>
               <?php endif; ?>
             </p>
 
-            <div class="mt-3">
-              <a href="<?= site_url('user/subscription') ?>" class="btn btn-primary btn-sm">
-                <i class="fas fa-sync-alt"></i> Perpanjang
-              </a>
-              <a href="<?= site_url('user/subscription') ?>" class="btn btn-warning btn-sm">
-                <i class="fas fa-level-up-alt"></i> Upgrade
-              </a>
-            </div>
+            <?php if ($subscription['status'] === 'active'): ?>
+              <div class="mt-3">
+                <a href="<?= site_url('user/subscription') ?>" class="btn btn-primary btn-sm">
+                  <i class="fas fa-sync-alt"></i> Perpanjang
+                </a>
+                <a href="<?= site_url('user/subscription') ?>" class="btn btn-warning btn-sm">
+                  <i class="fas fa-level-up-alt"></i> Upgrade
+                </a>
+              </div>
+            <?php elseif ($subscription['status'] === 'pending'): ?>
+              <p class="text-muted mt-3 mb-0">
+                Pembayaran kamu sedang diverifikasi oleh admin.<br>
+                Tombol akan aktif setelah langganan disetujui.
+              </p>
+            <?php endif; ?>
+
           <?php else: ?>
             <div class="text-center py-3">
               <span class="text-muted d-block mb-2">Kamu belum berlangganan.</span>

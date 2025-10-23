@@ -4,12 +4,6 @@
 <div class="container-fluid">
     <h4 class="mb-4 font-weight-bold text-primary">Subscription Plan</h4>
 
-    <?php if (session()->getFlashdata('message')) : ?>
-        <div class="alert alert-success"><?= session('message'); ?></div>
-    <?php elseif (session()->getFlashdata('error')) : ?>
-        <div class="alert alert-danger"><?= session('error'); ?></div>
-    <?php endif; ?>
-
     <div class="row">
         <!-- Monthly Plan -->
         <div class="col-md-6 mb-4">

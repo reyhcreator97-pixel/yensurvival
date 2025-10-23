@@ -27,15 +27,20 @@ class Panel extends BaseController
 
         // Ambil data subscription user (terbaru)
         $subscription = $this->subscriptionModel
+            ->select('id, user_id, plan_type, status, start_date, end_date')
             ->where('user_id', $userId)
             ->orderBy('end_date', 'DESC')
             ->first();
 
+            // dd($subscription);
+
         // Tentukan status
         $isActive = false;
-        if ($subscription && strtotime($subscription['end_date']) >= time()) {
-            $isActive = true;
+        if ($subscription && $subscription['status'] === 'active' && strtotime($subscription['end_date']) >= time()){
+        $isActive = true;
         }
+            
+        
 
         $data = [
             'title' => 'User Panel',

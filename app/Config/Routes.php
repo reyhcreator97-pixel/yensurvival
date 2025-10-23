@@ -160,6 +160,13 @@ $routes->get('users/delete/(:num)', 'admin\Users::delete/$1');
     $routes->get('settings/auto-backup', 'admin\Settings::autoBackup');
 
 // =========================
+// 🔹 ADMIN - Income
+// =========================
+
+    $routes->get('income', 'Admin\Income::index');
+    $routes->get('income/approve/(:num)', 'Admin\Income::approve/$1');
+
+// =========================
 // 🔹 ADMIN - Log
 // =========================
     $routes->get('logs', 'admin\Logs::index');

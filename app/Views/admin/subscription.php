@@ -33,7 +33,9 @@
                   <?php if ($r['status'] == 'active'): ?>
                     <span class="badge badge-success">Active</span>
                   <?php elseif ($r['status'] == 'expired'): ?>
-                    <span class="badge badge-warning">Expired</span>
+                    <span class="badge badge-secondary">Expired</span>
+                  <?php elseif ($r['status'] == 'pending'): ?>
+                    <span class="badge badge-warning">Pending</span>
                   <?php else: ?>
                     <span class="badge badge-danger">Canceled</span>
                   <?php endif; ?>

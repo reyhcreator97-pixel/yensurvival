@@ -39,6 +39,12 @@
                     <i class="fas fa-fw fa-users"></i>
                     <span>Subscription</span></a>
             </li>
+            <!-- Nav Item - User List -->
+            <li class="nav-item">
+                <a class="nav-link" href="<?= base_url('admin/income'); ?>">
+                    <i class="fas fa-fw fa-users"></i>
+                    <span>Income</span></a>
+            </li>
 
              <!-- Divider -->
              <hr class="sidebar-divider my-0">

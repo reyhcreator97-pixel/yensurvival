@@ -20,6 +20,7 @@ class CheckSubscription implements FilterInterface
         $subscriptionModel = new SubscriptionModel();
         $subscription = $subscriptionModel
             ->where('user_id', $userId)
+            ->where('status', 'active')
             ->orderBy('end_date', 'DESC')
             ->first();
 
