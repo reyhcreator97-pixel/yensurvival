@@ -235,10 +235,17 @@ function confirmDelete(url) {
     cancelButtonText: 'Batal',
     background: '#ffffff'
   }).then((result) => {
-    if (result.isConfirmed) {
-      window.location.href = url;
-    }
-  });
+        if (result.isConfirmed) {
+          // Optional: tambahin animasi loading sebelum redirect
+          Swal.fire({
+            title: 'Menghapus...',
+            text: 'Mohon tunggu sebentar',
+            allowOutsideClick: false,
+            didOpen: () => Swal.showLoading()
+          });
+          window.location.href = url;
+        }
+      });
 }
 
 // 🔄 KONFIRMASI RESET PASSWORD
