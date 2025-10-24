@@ -33,6 +33,7 @@ $routes->group('user', ['filter' => 'login'], function($routes) {
     $routes->get('subscription/buy/(:segment)', 'User\Subscription::buy/$1');
     $routes->get('subscription/upgrade', 'User\Subscription::upgrade');
     $routes->get('subscription/renew', 'User\Subscription::renew');
+    $routes->get('subscription/checkout/(:segment)', 'User\Subscription::checkout/$1');
 });
 
 

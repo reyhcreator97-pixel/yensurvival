@@ -4,6 +4,7 @@
 <div class="container-fluid">
     <h4 class="mb-4 font-weight-bold text-primary">Subscription Plan</h4>
 
+
     <div class="row">
         <!-- Monthly Plan -->
         <div class="col-md-6 mb-4">
@@ -12,14 +13,16 @@
                     <h5 class="font-weight-bold">Bulanan</h5>
                     <h3 class="text-dark">¥<?= number_format($priceMonthly) ?>/bulan</h3>
 
-                    <?php if (!empty($subscription) && isset($subscription['plan']) && $subscription['plan'] == 'monthly' && isset($subscription['status']) && $subscription['status'] == 'active') : ?>
+                    <?php if ($subscription && $subscription['plan_type'] == 'monthly' && $subscription['status'] == 'active') : ?>
                         <p><?= ceil((strtotime($subscription['end_date']) - time()) / 86400) ?> days remaining</p>
-                        <a href="<?= site_url('user/subscription/buy/monthly'); ?>" class="btn btn-primary btn-sm">Perpanjang</a>
-                        <a href="<?= site_url('user/subscription/buy/yearly'); ?>" class="btn btn-outline-primary btn-sm">Upgrade</a>
-                    <?php elseif (!empty($subscription) && isset($subscription['plan']) && $subscription['plan'] == 'yearly') : ?>
+                        <a href="<?= site_url('user/subscription/checkout/monthly'); ?>" class="btn btn-primary btn-sm">Perpanjang</a>
+                        <a href="<?= site_url('user/subscription/checkout/yearly'); ?>" class="btn btn-outline-primary btn-sm">Upgrade</a>
+
+                    <?php elseif ($subscription && $subscription['plan_type'] == 'yearly') : ?>
                         <p><span class="badge badge-success">Active Yearly Plan</span></p>
+
                     <?php else : ?>
-                        <a href="<?= site_url('user/subscription/buy/monthly'); ?>" class="btn btn-primary btn-sm">Beli Subscription</a>
+                        <a href="<?= site_url('user/subscription/checkout/monthly'); ?>" class="btn btn-primary btn-sm">Beli Subscription</a>
                     <?php endif; ?>
                 </div>
             </div>
@@ -33,13 +36,15 @@
                     <h3 class="text-dark">¥<?= number_format($priceYearly) ?>/tahun</h3>
                     <p>365 Hari Full Akses</p>
 
-                    <?php if (!empty($subscription) && isset($subscription['plan']) && $subscription['plan'] == 'yearly' && isset($subscription['status']) && $subscription['status'] == 'active') : ?>
+                    <?php if ($subscription && $subscription['plan_type'] == 'yearly' && $subscription['status'] == 'active') : ?>
                         <p><?= ceil((strtotime($subscription['end_date']) - time()) / 86400) ?> days remaining</p>
-                        <a href="<?= site_url('user/subscription/buy/yearly'); ?>" class="btn btn-primary btn-sm">Perpanjang</a>
-                    <?php elseif (!empty($subscription) && isset($subscription['plan']) && $subscription['plan'] == 'monthly') : ?>
-                        <a href="<?= site_url('user/subscription/buy/yearly'); ?>" class="btn btn-outline-primary btn-sm">Upgrade</a>
+                        <a href="<?= site_url('user/subscription/checkout/yearly'); ?>" class="btn btn-primary btn-sm">Perpanjang</a>
+
+                    <?php elseif ($subscription && $subscription['plan_type'] == 'monthly') : ?>
+                        <a href="<?= site_url('user/subscription/checkout/yearly'); ?>" class="btn btn-outline-primary btn-sm">Upgrade</a>
+
                     <?php else : ?>
-                        <a href="<?= site_url('user/subscription/buy/yearly'); ?>" class="btn btn-primary btn-sm">Beli Subscription</a>
+                        <a href="<?= site_url('user/subscription/checkout/yearly'); ?>" class="btn btn-primary btn-sm">Beli Subscription</a>
                     <?php endif; ?>
                 </div>
             </div>
