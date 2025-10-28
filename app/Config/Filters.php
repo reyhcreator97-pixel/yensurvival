@@ -28,6 +28,7 @@ class Filters extends BaseConfig
         'role'       => \Myth\Auth\Filters\RoleFilter::class,
         'permission' => \Myth\Auth\Filters\PermissionFilter::class,
         'subscription' => \App\Filters\CheckSubscription::class, // Filter Subscription
+        'optionalLogin' => \App\Filters\OptionalLogin::class, // Optional Login
     ];
 
     /**
@@ -41,7 +42,7 @@ class Filters extends BaseConfig
             // 'honeypot',
             // 'csrf',
             // 'invalidchars',
-            'login'
+            // 'login'
         ],
         'after' => [
             'toolbar',

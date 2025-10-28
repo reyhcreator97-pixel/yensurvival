@@ -2,8 +2,16 @@
 
 namespace App\Controllers;
 helper('auth');
+use Myth\Auth\Config\Auth as AuthConfig;
+
 class Home extends BaseController
 {
+    public function login(): string
+    {
+        $config = new AuthConfig();
+        return view('auth/login', ['config' => $config]);
+    }
+
     public function index()
     {
         if (!logged_in()) {
@@ -18,6 +26,7 @@ class Home extends BaseController
     {
         return view('auth/register');
     }
+
 
     public function user(): string
     {

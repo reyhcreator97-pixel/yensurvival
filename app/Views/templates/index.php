@@ -142,6 +142,40 @@ document.addEventListener("DOMContentLoaded", function() {
 });
 </script>
 
+<?php if (session()->getFlashdata('login_success')): ?>
+<script>
+Swal.fire({
+    title: 'Berhasil!',
+    html: `
+        <div style="display:flex; flex-direction:column; align-items:center; justify-content:center;">
+            <div class="spinner-border text-success" role="status" style="width: 2.5rem; height: 2.5rem; margin-bottom:10px;">
+                <span class="sr-only">Loading...</span>
+            </div>
+            <p style="margin:0;"><?= session()->getFlashdata('login_success') ?></p>
+            <div class="progress" style="width:100%; height:6px; margin-top:10px; background:#eee;">
+                <div class="progress-bar bg-success progress-bar-striped progress-bar-animated" 
+                     style="width:100%; animation: progressAnim 1.8s linear forwards;">
+                </div>
+            </div>
+        </div>
+    `,
+    showConfirmButton: false,
+    timer: 2000,
+    allowOutsideClick: false,
+    
+});
+
+// progress bar animasi halus
+const style = document.createElement('style');
+style.innerHTML = `
+@keyframes progressAnim {
+    from { width: 0%; }
+    to { width: 100%; }
+}`;
+document.head.appendChild(style);
+</script>
+<?php endif; ?>
+
 <?php if (session()->getFlashdata('message')): ?>
 <script>
 Swal.fire({

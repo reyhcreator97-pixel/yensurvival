@@ -2,93 +2,135 @@
 namespace App\Controllers\User;
 
 use App\Controllers\BaseController;
-use App\Models\SettingModel;
-use App\Models\TransaksiModel;
+use App\Controllers\KursDcom;
+use App\Models\UsersModel;
 use App\Models\SubscriptionModel;
+use Myth\Auth\Password;
 
 class Checkout extends BaseController
 {
-    protected $settings;
-    protected $transaksiModel;
-    protected $subscriptionModel;
+    protected $db;
+    protected $userModel;
 
     public function __construct()
     {
-        $this->settings = new SettingModel();
-        $this->transaksiModel = new TransaksiModel();
-        $this->subscriptionModel = new SubscriptionModel();
+        $this->db = \Config\Database::connect();
+        $this->userModel = new UsersModel();
     }
 
-    public function index($plan = null)
+    public function index()
     {
-        if (!$plan || !in_array($plan, ['monthly', 'yearly'])) {
-            return redirect()->to('/user/subscription')->with('error', 'Paket tidak valid.');
-        }
-    
-        $config = $this->settings->first();
-        $price  = ($plan === 'monthly') ? $config['price_monthly'] : $config['price_yearly'];
-        $currency = $config['currency'] ?? '¥';
-        $wa = $config['contact_whatsapp'] ?? '';
-    
-        // Tambahkan data rekening
-        $rekeningJapan = [
-            'bank' => 'MUFG Japan',
-            'no'   => '123-456-7890',
-            'nama' => 'Rey Creator'
+        $plan = $this->request->getGet('plan_type') ?? 'monthly';
+        $country = $this->request->getGet('country') ?? 'japan';
+
+        // Ambil harga dari settings
+        $settings = $this->db->table('settings')->get()->getRow();
+        $price = ($plan === 'monthly') ? $settings->price_monthly : $settings->price_yearly;
+
+        // Ambil kurs dari controller KursDcom
+        $kursCtrl = new KursDcom();
+        $kurs = $kursCtrl->getKurs();
+        $kursText = "Rp " . number_format($kurs, 2, ',', '.');
+
+        // Hitung harga dalam Rupiah jika pilih Indonesia
+        $priceIDR = ($kurs > 0) ? $price * $kurs : 0;
+
+        $data = [
+            'title' => 'Checkout Subscription',
+            'plan_type' => ucfirst($plan),
+            'country' => $country,
+            'priceYen' => $price,
+            'priceIDR' => $priceIDR,
+            'kursText' => $kursText,
+            'kurs' => $kurs
         ];
-    
-        $rekeningIndo = [
-            'bank' => 'BCA Indonesia',
-            'no'   => '987-654-3210',
-            'nama' => 'Rey Creator'
-        ];
-    
-        return view('user/checkout', [
-            'title'    => 'Checkout Subscription',
-            'plan'     => $plan,
-            'price'    => $price,
-            'currency' => $currency,
-            'wa'       => $wa,
-            'rekeningJapan' => $rekeningJapan,
-            'rekeningIndo'  => $rekeningIndo,
-        ]);
+
+        return view('user/checkout-form', $data);
     }
 
-    public function confirm()
+    public function process()
     {
-        $plan = $this->request->getPost('plan');
-        if (!$plan) {
-            return redirect()->to('/user/subscription')->with('error', 'Data tidak valid.');
-        }
+        $post = $this->request->getPost();
 
-        $config = $this->settings->first();
-        $price  = ($plan === 'monthly') ? $config['price_monthly'] : $config['price_yearly'];
-        $duration = ($plan === 'monthly') ? 30 : 365;
+        // Pakai password hashing dari Myth\Auth (biar bisa login normal)
+        $passwordHash = Password::hash($post['password'] ?? '');
 
-        $userId = user_id();
-        $startDate = date('Y-m-d');
-        $endDate = date('Y-m-d', strtotime("+{$duration} days"));
-
-        // Simpan ke tabel subscription (pending)
-        $this->subscriptionModel->insert([
-            'user_id'    => $userId,
-            'plan'       => $plan,
-            'price'      => $price,
-            'start_date' => $startDate,
-            'end_date'   => $endDate,
-            'status'     => 'pending'
+        // Simpan user baru dan langsung aktif
+        $this->userModel->insert([
+            'username'      => $post['username'] ?? '',
+            'email'         => $post['email'] ?? '',
+            'password_hash' => $passwordHash,
+            'active'        => 1,
         ]);
 
-        // Catat transaksi subscription
-        $this->transaksiModel->insert([
+        // Ambil ID user baru
+        $userId = $this->userModel->getInsertID();
+
+        // Masukkan user baru ke grup "User" (group_id = 2)
+        $this->db->table('auth_groups_users')->insert([
+            'user_id'  => $userId,
+            'group_id' => 2
+        ]);
+
+        // Ambil data plan, negara, dan harga
+        $plan_type = $post['plan_type'] ?? 'monthly';
+        $country   = $post['country'] ?? 'japan';
+        $price     = $post['price'] ?? 0;
+        $priceIDR  = $post['priceIDR'] ?? 0;
+
+        // === Tambahkan ke tabel subscription ===
+        $subscriptionData = [
             'user_id'     => $userId,
-            'kategori'    => 'subscription',
-            'deskripsi'   => ucfirst($plan).' Plan Subscription',
-            'jumlah'      => $price,
-            'status'      => 'pending'
+            'plan_type'   => $plan_type,
+            'start_date'  => date('Y-m-d'),
+            'end_date'    => ($plan_type === 'monthly')
+                                ? date('Y-m-d', strtotime('+1 month'))
+                                : date('Y-m-d', strtotime('+1 year')),
+            'status'      => 'pending',
+        ];
+        $this->db->table('subscriptions')->insert($subscriptionData);
+
+       // Tambah ke tabel transaksi (pakai harga yen)
+        $this->db->table('transaksi')->insert([
+            'user_id'   => $userId,
+            'tanggal'   => date('Y-m-d'),
+            'jenis'     => 'out',
+            'kategori'  => 'subscription',
+            'deskripsi' => 'Pembelian paket ' . ucfirst($plan_type) . ' plan',
+            'status'    => 'pending',
+            'jumlah'    => $price,
+            'is_initial'=> 0,
         ]);
 
-        return redirect()->to('/user/subscription')
-            ->with('message', 'Pesanan berhasil dibuat. Silakan konfirmasi pembayaran via WhatsApp.');
+        // === Simpan data ke session sementara ===
+        session()->setFlashdata('checkout-form', [
+            'username'   => $post['username'] ?? '',
+            'email'      => $post['email'] ?? '',
+            'country'    => $country,
+            'plan_type'  => $plan_type,
+            'price'      => $price,
+            'priceIDR'   => $priceIDR,
+        ]);
+
+        return redirect()->to('checkout-form/thankyou');
+    }
+
+    public function thankyou()
+    {
+        $checkout = session()->getFlashdata('checkout-form');
+
+        if (!$checkout || !is_array($checkout)) {
+            return redirect()->to('checkout-form')->with('error', 'Data checkout tidak ditemukan, silakan ulangi proses pembayaran.');
+        }
+
+        $settings = $this->db->table('settings')->get()->getRow();
+        $adminWa  = $settings->contact_whatsapp ?? '';
+        $waUrl    = "https://wa.me/{$adminWa}?text=Halo%20Admin,%20saya%20ingin%20konfirmasi%20pembayaran%20Yen%20Survival.";
+
+        return view('user/thankyou', [
+            'title'    => 'Terima Kasih',
+            'checkout' => $checkout,
+            'waUrl'    => $waUrl
+        ]);
     }
 }

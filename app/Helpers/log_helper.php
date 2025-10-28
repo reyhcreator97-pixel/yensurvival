@@ -5,7 +5,7 @@ use Config\Database;
 if (!function_exists('log_activity')) {
     function log_activity($action, $description = null)
     {
-        $userId = user_id() ?? 0;
+        $userId = function_exists('user_id') ? user_id() : 0;
         $role   = 'unknown';
 
         // Deteksi role via tabel Myth/Auth

@@ -11,7 +11,13 @@
           <h5 class="font-weight-bold mb-3">Rincian Langganan</h5>
           <p><strong>Plan:</strong> <?= esc($plan) ?></p>
           <p><strong>Durasi:</strong> <?= esc($duration) ?> hari</p>
-          <p><strong>Harga:</strong> <?= esc($currency) ?><?= number_format($price) ?></p>
+          <p><strong>Harga:</strong>
+            <span id="currencySymbol"><?= esc($currency) ?></span>
+            <span id="priceValue"><?= number_format($price) ?></span>
+          </p>
+          <p class="text-muted small">
+            (Kurs DCOM: 1 JPY = Rp <?= rtrim(rtrim(number_format($kurs, 2, '.', ''), '0'), '.') ?>)
+          </p>
 
           <hr>
           <div class="form-group">
@@ -83,4 +89,48 @@ document.addEventListener("DOMContentLoaded", function() {
 });
 </script>
 
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const countrySelect = document.getElementById('countrySelect');
+    const paymentInfo = document.getElementById('paymentInfo');
+    const japanAccount = document.getElementById('japanAccount');
+    const indoAccount = document.getElementById('indoAccount');
+    const priceElement = document.getElementById('priceValue');
+    const currencyElement = document.getElementById('currencySymbol');
+
+    // ambil variabel kurs dan harga asli dari PHP
+    const kursJPYtoIDR = <?= $kurs ?>;
+    const originalPrice = <?= $price ?>;
+
+    // fungsi helper buat format angka
+    const formatIDR = (num) => new Intl.NumberFormat('id-ID').format(num);
+    const formatJPY = (num) => new Intl.NumberFormat('ja-JP').format(num);
+
+    countrySelect.addEventListener('change', function() {
+        const selected = this.value;
+        paymentInfo.style.display = 'block';
+
+        if (selected === 'indonesia') {
+            japanAccount.classList.add('d-none');
+            indoAccount.classList.remove('d-none');
+
+            // konversi harga ke IDR
+            const converted = Math.round(originalPrice * kursJPYtoIDR);
+            priceElement.textContent = formatIDR(converted);
+            currencyElement.textContent = 'Rp';
+        } else if (selected === 'japan') {
+            indoAccount.classList.add('d-none');
+            japanAccount.classList.remove('d-none');
+
+            // kembali ke yen
+            priceElement.textContent = formatJPY(originalPrice);
+            currencyElement.textContent = '¥';
+        } else {
+            paymentInfo.style.display = 'none';
+        }
+    });
+});
+</script>
+
 <?= $this->endSection(); ?>
+

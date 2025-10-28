@@ -5,15 +5,23 @@ use CodeIgniter\Router\RouteCollection;
 /**
  * @var RouteCollection $routes
  */
-$routes->get('/', 'Home::index');
-// $routes->get('/user/index', 'User::index');
-// $routes->get('/user/dashboard', 'User::dashboard');
+$routes->get('/', 'Home::login');
 $routes->get('/register', 'Home::register');
+$routes->get('/login', 'Home::login');
+
 $routes->get('/user', 'Home::user');
 $routes->get('/dream', 'Home::dream');
 
 $routes->get('/emas-indogold', 'EmasIndogold::index');
 $routes->get('/kurs', 'KursDcom::index');
+
+//Checkout dari landing page (tanpa login)
+$routes->group('', ['filter' => 'optionalLogin'], function($routes) {
+$routes->get('checkout-form', 'user\Checkout::index');
+$routes->post('checkout-form/process', 'user\Checkout::process');
+$routes->get('checkout-form/thankyou', 'user\Checkout::thankyou');
+});
+
 
 // ===============================
 // 📦 ROUTES UNTUK USER

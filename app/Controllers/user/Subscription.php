@@ -99,28 +99,36 @@ class Subscription extends BaseController
     }
 
     public function checkout($plan)
-{
-    $userId = user_id();
-    $settings = $this->db->table('settings')->get()->getRow();
-
-    if (!$settings) {
-        return redirect()->to('/user/subscription')->with('error', 'Konfigurasi sistem belum tersedia.');
+    {
+        $userId = user_id();
+        $settings = $this->db->table('settings')->get()->getRow();
+    
+        if (!$settings) {
+            return redirect()->to('/user/subscription')->with('error', 'Konfigurasi sistem belum tersedia.');
+        }
+    
+        // Tentukan plan
+        $price = ($plan == 'monthly') ? $settings->price_monthly : $settings->price_yearly;
+        $duration = ($plan == 'monthly') ? 30 : 365;
+    
+        // 🔹 Ambil kurs real-time dari controller KursDcom
+        $kursController = new \App\Controllers\KursDcom();
+        $kurs = $kursController->getKurs();  // memanggil function yang udah lo bikin
+        if (!$kurs || $kurs == 0) {
+            $kurs = 110; // fallback kalau gagal ambil dari DCOM
+        }
+    
+        // Data untuk ditampilkan
+        $data = [
+            'title'     => 'Checkout Subscription',
+            'plan'      => ucfirst($plan),
+            'price'     => $price,
+            'duration'  => $duration,
+            'currency'  => $settings->currency,
+            'adminWa'   => $settings->contact_whatsapp,
+            'kurs'      => $kurs, // dikirim ke view
+        ];
+    
+        return view('user/checkout', $data);
     }
-
-    // Tentukan plan
-    $price = ($plan === 'monthly') ? $settings->price_monthly : $settings->price_yearly;
-    $duration = ($plan === 'monthly') ? 30 : 365;
-
-    // Data untuk ditampilkan
-    $data = [
-        'title' => 'Checkout Subscription',
-        'plan' => ucfirst($plan),
-        'price' => $price,
-        'duration' => $duration,
-        'currency' => $settings->currency,
-        'adminWa' => $settings->contact_whatsapp,
-    ];
-
-    return view('user/checkout', $data);
-}
 }
