@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Controllers\User;
 
 use App\Controllers\BaseController;
@@ -26,6 +27,7 @@ class Checkout extends BaseController
         // Ambil harga dari settings
         $settings = $this->db->table('settings')->get()->getRow();
         $price = ($plan === 'monthly') ? $settings->price_monthly : $settings->price_yearly;
+        $price = number_format($price, 0, '', '');
 
         // Ambil kurs dari controller KursDcom
         $kursCtrl = new KursDcom();
@@ -84,13 +86,13 @@ class Checkout extends BaseController
             'plan_type'   => $plan_type,
             'start_date'  => date('Y-m-d'),
             'end_date'    => ($plan_type === 'monthly')
-                                ? date('Y-m-d', strtotime('+1 month'))
-                                : date('Y-m-d', strtotime('+1 year')),
+                ? date('Y-m-d', strtotime('+1 month'))
+                : date('Y-m-d', strtotime('+1 year')),
             'status'      => 'pending',
         ];
         $this->db->table('subscriptions')->insert($subscriptionData);
 
-       // Tambah ke tabel transaksi (pakai harga yen)
+        // Tambah ke tabel transaksi (pakai harga yen)
         $this->db->table('transaksi')->insert([
             'user_id'   => $userId,
             'tanggal'   => date('Y-m-d'),
@@ -99,7 +101,7 @@ class Checkout extends BaseController
             'deskripsi' => 'Pembelian paket ' . ucfirst($plan_type) . ' plan',
             'status'    => 'pending',
             'jumlah'    => $price,
-            'is_initial'=> 0,
+            'is_initial' => 0,
         ]);
 
         // === Simpan data ke session sementara ===

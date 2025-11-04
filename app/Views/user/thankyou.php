@@ -1,4 +1,7 @@
-<?= $this->extend('templates/index_checkout'); ?> <?= $this->section('page-content'); ?> <style>
+<?= $this->extend('templates/index_checkout'); ?>
+<?= $this->section('page-content'); ?>
+
+<style>
   body {
     background: linear-gradient(180deg, #f9fafc 0%, #eef1f5 100%);
     font-family: 'Poppins', sans-serif;
@@ -101,6 +104,7 @@
     width: 100%;
     text-align: center;
     margin-top: 15px;
+    transition: .3s;
   }
 
   .btn-whatsapp:hover {
@@ -119,7 +123,8 @@
   }
 
   .ticket-system .receipts .receipt.qr-code:after {
-    background-image: linear-gradient(135deg, #fff 0.5rem, rgba(0, 0, 0, 0) 0), linear-gradient(-135deg, #fff 0.5rem, rgba(0, 0, 0, 0) 0);
+    background-image: linear-gradient(135deg, #fff 0.5rem, rgba(0, 0, 0, 0) 0),
+      linear-gradient(-135deg, #fff 0.5rem, rgba(0, 0, 0, 0) 0);
     background-position: left-bottom;
     background-repeat: repeat-x;
     background-size: 1rem;
@@ -161,38 +166,137 @@
     color: #333;
   }
 
-  /* ===================== RESPONSIVE ===================== */
-  @media (max-width: 576px) {
+  /* ===================== RESPONSIVE FIX (MOBILE) ===================== */
+  @media (max-width: 768px) {
     .ticket-system {
-      max-width: 90%;
+      max-width: 95%;
+      margin: 40px auto 70px;
+    }
+
+    .ticket-system .top .printer {
+      width: 96%;
+      height: 22px;
+      border-width: 4px;
+      border-radius: 8px;
     }
 
     .ticket-system .receipts .receipt {
+      width: 90%;
       padding: 20px 18px;
-      width: 95%;
+      border-radius: 0 0 16px 16px;
+    }
+
+    .qr-code img {
+      width: 50px;
+      height: 50px;
     }
   }
-</style> <!-- ===================== HTML ===================== -->
+
+  @media (max-width: 576px) {
+    .ticket-system {
+      max-width: 92%;
+    }
+
+    .ticket-system .top .printer {
+      width: 90%;
+      height: 26px;
+      /* printer lebih besar biar proporsional */
+      border-width: 4px;
+      border-radius: 10px;
+    }
+
+    .ticket-system .receipts .receipt {
+      width: 89%;
+      /* kertas lebih kecil biar masuk printer */
+      padding: 18px 14px;
+      border-radius: 0 0 14px 14px;
+      box-shadow: 1px 2px 6px rgba(0, 0, 0, 0.15);
+    }
+
+    .success-check {
+      width: 60px;
+      height: 60px;
+    }
+
+    h4 {
+      font-size: 1.05rem;
+    }
+
+    h5,
+    h6 {
+      font-size: .95rem;
+    }
+
+    .btn-whatsapp {
+      font-size: .88rem;
+      padding: 9px 0;
+    }
+
+    .qr-code img {
+      width: 42px;
+      height: 42px;
+    }
+
+    .qr-code .description h2 {
+      font-size: 1.05rem;
+    }
+  }
+
+  @media (max-width: 420px) {
+    .ticket-system {
+      max-width: 100%;
+    }
+
+    .ticket-system .receipts .receipt {
+      width: 84%;
+      padding: 15px 10px;
+    }
+
+    .ticket-system .top .printer {
+      height: 24px;
+    }
+
+    .btn-whatsapp {
+      font-size: .8rem;
+    }
+  }
+</style>
+
+<!-- ===================== HTML ===================== -->
 <main class="ticket-system">
   <div class="top">
     <div class="printer"></div>
   </div>
+
   <div class="receipts-wrapper">
     <div class="receipts">
       <div class="receipt">
-        <div class="success-check"> <lottie-player src="https://assets1.lottiefiles.com/packages/lf20_jbrw3hcz.json" background="transparent" speed="1" loop="false" autoplay></lottie-player> </div>
-        <h4>Pembayaran Berhasil!</h4>
-        <p class="text-center mb-2">Terima kasih sudah melakukan langganan YEN Survival.</p>
+        <div class="success-check">
+          <lottie-player src="https://assets1.lottiefiles.com/packages/lf20_jbrw3hcz.json"
+            background="transparent" speed="1" loop="false" autoplay></lottie-player>
+        </div>
+
+        <h4>Pembelian Berhasil!</h4>
         <p class="text-center">Silakan selesaikan pembayaran sebelum waktu berikut:</p>
         <h5 id="countdown" class="text-danger font-weight-bold mb-4 text-center"></h5>
+
         <div class="text-left">
           <h6>Detail Pembayaran:</h6>
           <p><strong>Plan:</strong> <?= ucfirst($checkout['plan_type']) ?></p>
           <p><strong>Total:</strong> <?= $checkout['country'] === 'japan' ? '¥' . $checkout['price'] : 'Rp' . $checkout['priceIDR'] ?></p>
-          <p><strong>Nomor Rekening:</strong> <?= $checkout['country'] === 'japan' ? 'Mitsui Bank: 123-456-789' : 'BCA: 123-456-7890' ?> </p>
-        </div> <a href="<?= $waUrl ?>" target="_blank" class="btn btn-whatsapp"> <i class="fab fa-whatsapp"></i> Konfirmasi Pembayaran </a>
-      </div> <!-- ======== BAGIAN TERIMA KASIH (STRUK BAWAH) ======== -->
-      <div class="receipt qr-code"> <img src="<?= base_url('assets/img/logo-ys.png') ?>" alt="YEN Survival">
+          <p><strong>Nomor Rekening:</strong></p>
+          <p>
+            <?= $checkout['country'] === 'japan' ? 'Mitsui Bank: 123-456-789' : 'BCA: 123-456-7890' ?>
+          </p>
+        </div>
+
+        <a href="<?= $waUrl ?>" target="_blank" class="btn btn-whatsapp">
+          <i class="fab fa-whatsapp"></i> Konfirmasi Pembayaran
+        </a>
+      </div>
+
+      <div class="receipt qr-code">
+        <img src="<?= base_url('assets/img/logo-ys.png') ?>" alt="YEN Survival">
         <div class="description">
           <h2>Terima Kasih</h2>
         </div>
@@ -200,23 +304,35 @@
     </div>
   </div>
 </main>
+
 <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
 <script>
-  let target = new Date();
-  target.setHours(target.getHours() + 24);
-  let x = setInterval(() => {
-    let now = new Date().getTime();
-    let dist = target - now;
-    if (dist <= 0) {
-      clearInterval(x);
-      document.getElementById("countdown").innerHTML = "Waktu habis";
-    } else {
-      let h = Math.floor((dist % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-      let m = Math.floor((dist % (1000 * 60 * 60)) / (1000 * 60));
-      let s = Math.floor((dist % (1000 * 60)) / 1000);
-      document.getElementById("countdown").innerHTML = `${h}j ${m}m ${s}d`;
-    }
-  }, 1000);
+  document.addEventListener("DOMContentLoaded", () => {
+    setTimeout(() => {
+      const countdownEl = document.getElementById("countdown");
+      if (!countdownEl) return;
+      let target = new Date();
+      target.setHours(target.getHours() + 24);
+
+      function updateCountdown() {
+        let now = new Date().getTime();
+        let dist = target - now;
+        if (dist <= 0) {
+          countdownEl.innerHTML = "Waktu habis";
+          countdownEl.style.color = "#dc3545";
+          clearInterval(x);
+        } else {
+          let h = Math.floor((dist % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+          let m = Math.floor((dist % (1000 * 60 * 60)) / (1000 * 60));
+          let s = Math.floor((dist % (1000 * 60)) / 1000);
+          countdownEl.innerHTML = h + "j " + m + "m " + s + "d";
+          countdownEl.style.color = "#e63946";
+        }
+      }
+      updateCountdown();
+      var x = setInterval(updateCountdown, 1000);
+    }, 2800);
+  });
 </script>
 
 <?= $this->endSection(); ?>
