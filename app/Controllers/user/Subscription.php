@@ -64,61 +64,114 @@ class Subscription extends BaseController
     {
         $userId = user_id();
         $settings = $this->db->table('settings')->get()->getRow();
-    
+
         $price = ($plan === 'monthly') ? $settings->price_monthly : $settings->price_yearly;
         $duration = ($plan === 'monthly') ? 30 : 365;
-    
+
         $startDate = date('Y-m-d');
-        $endDate = date('Y-m-d', strtotime("+{$duration} days"));
-    
-        
-        // Simpan ke tabel subscription
-        $this->subscriptionModel->insert([
-            'user_id'    => $userId,
-            'plan_type'  => $plan,
-            'price'      => $price,
-            'start_date' => $startDate,
-            'end_date'   => $endDate,
-            'status'     => 'pending'
-        ]);
-    
-        // Catat juga ke tabel transaksi
+        $endDate   = date('Y-m-d', strtotime("+{$duration} days"));
+        $today     = date('Y-m-d');
+
+        // 🔥 Cek subscription aktif user
+        $activeSub = $this->subscriptionModel
+            ->where('user_id', $userId)
+            ->whereIn('status', ['active', 'pending']) // include pending agar bisa extend sebelum approve
+            ->orderBy('end_date', 'DESC')
+            ->first();
+
+        // Jika belum punya langganan sama sekali
+        if (!$activeSub) {
+            $this->subscriptionModel->insert([
+                'user_id'    => $userId,
+                'plan_type'  => $plan,
+                'price'      => $price,
+                'start_date' => $startDate,
+                'end_date'   => $endDate,
+                'status'     => 'pending'
+            ]);
+        } else {
+            $currentPlan = $activeSub['plan_type'];
+            $currentEnd  = $activeSub['end_date'];
+
+            // 🔹 Jika masih aktif dan beli plan yang sama → perpanjang
+            if ($currentPlan === $plan) {
+                // ✅ FIX: Tambah dari tanggal akhir lama agar sisa hari tidak hilang
+                $base = (strtotime($currentEnd) > strtotime($today)) ? $currentEnd : $today;
+
+                $newEnd = ($plan === 'monthly')
+                    ? date('Y-m-d', strtotime($base . ' +30 days'))
+                    : date('Y-m-d', strtotime($base . ' +365 days'));
+
+                // ✅ Jangan ubah status jadi pending biar user masih punya akses
+                $this->subscriptionModel->update($activeSub['id'], [
+                    'end_date' => $newEnd,
+                ]);
+            }
+
+            // 🔹 Jika upgrade (monthly → yearly)
+            elseif ($currentPlan === 'monthly' && $plan === 'yearly') {
+                // ✅ FIX: Tambah dari sisa langganan lama agar gak kehilangan waktu
+                $base = (strtotime($currentEnd) > strtotime($today)) ? $currentEnd : $today;
+                $newEnd = date('Y-m-d', strtotime($base . ' +365 days'));
+
+                // ✅ Gak ubah status ke pending, user masih bisa akses
+                $this->subscriptionModel->update($activeSub['id'], [
+                    'plan_type' => 'yearly',
+                    'end_date'  => $newEnd,
+                ]);
+            }
+
+            // 🔹 Jika langganan lama sudah expired → buat baru
+            elseif ($activeSub['status'] === 'expired' || strtotime($currentEnd) < strtotime($today)) {
+                $this->subscriptionModel->insert([
+                    'user_id'    => $userId,
+                    'plan_type'  => $plan,
+                    'price'      => $price,
+                    'start_date' => $startDate,
+                    'end_date'   => $endDate,
+                    'status'     => 'pending'
+                ]);
+            }
+        }
+
+        // 🔥 Catat ke tabel transaksi (tetap pending, tapi gak ubah akses)
         $this->transaksiModel->insert([
             'user_id'   => $userId,
             'tanggal'   => date('Y-m-d'),
-            'jenis'     => 'out', // pengeluaran
+            'jenis'     => 'out',
             'kategori'  => 'subscription',
             'deskripsi' => ucfirst($plan) . ' Plan Subscription',
             'jumlah'    => $price,
-            'status'    => 'pending', // baru ditambahkan ✅
-            'created_at'=> date('Y-m-d H:i:s'),
-            'updated_at'=> date('Y-m-d H:i:s')
+            'status'    => 'pending',
+            'created_at' => date('Y-m-d H:i:s'),
+            'updated_at' => date('Y-m-d H:i:s')
         ]);
-    
-        return redirect()->to('/user/subscription')->with('message', 'Pemesanan berhasil dibuat. Silakan konfirmasi pembayaran melalui WhatsApp.');
+
+        return redirect()->to('/user/subscription')
+            ->with('message', 'Perpanjangan berhasil diajukan. Langganan kamu tetap aktif sampai masa aktif lama berakhir.');
     }
+
 
     public function checkout($plan)
     {
         $userId = user_id();
         $settings = $this->db->table('settings')->get()->getRow();
-    
+
         if (!$settings) {
             return redirect()->to('/user/subscription')->with('error', 'Konfigurasi sistem belum tersedia.');
         }
-    
+
         // Tentukan plan
         $price = ($plan == 'monthly') ? $settings->price_monthly : $settings->price_yearly;
         $duration = ($plan == 'monthly') ? 30 : 365;
-    
+
         // 🔹 Ambil kurs real-time dari controller KursDcom
         $kursController = new \App\Controllers\KursDcom();
-        $kurs = $kursController->getKurs();  // memanggil function yang udah lo bikin
+        $kurs = $kursController->getKurs();
         if (!$kurs || $kurs == 0) {
-            $kurs = 110; // fallback kalau gagal ambil dari DCOM
+            $kurs = 110;
         }
-    
-        // Data untuk ditampilkan
+
         $data = [
             'title'     => 'Checkout Subscription',
             'plan'      => ucfirst($plan),
@@ -126,9 +179,9 @@ class Subscription extends BaseController
             'duration'  => $duration,
             'currency'  => $settings->currency,
             'adminWa'   => $settings->contact_whatsapp,
-            'kurs'      => $kurs, // dikirim ke view
+            'kurs'      => $kurs,
         ];
-    
+
         return view('user/checkout', $data);
     }
 }
