@@ -36,12 +36,14 @@
             <p><strong>Plan:</strong> <?= ucfirst($subscription['plan_type']) ?></p>
             <p><strong>Mulai:</strong> <?= esc($subscription['start_date']) ?></p>
             <p><strong>Berakhir:</strong> <?= esc($subscription['end_date']) ?></p>
-            
+
             <p><strong>Status:</strong>
               <?php if ($subscription['status'] === 'active'): ?>
                 <span class="badge badge-success">Aktif</span>
               <?php elseif ($subscription['status'] === 'pending'): ?>
                 <span class="badge badge-warning">Menunggu Konfirmasi Admin</span>
+              <?php elseif ($subscription['status'] === 'expired'): ?>
+                <span class="badge badge-danger">Expired</span>
               <?php else: ?>
                 <span class="badge badge-secondary">Tidak Aktif</span>
               <?php endif; ?>
@@ -61,6 +63,10 @@
                 Pembayaran kamu sedang diverifikasi oleh admin.<br>
                 Tombol akan aktif setelah langganan disetujui.
               </p>
+            <?php elseif ($subscription['status'] === 'expired'): ?>
+              <a href="<?= site_url('user/subscription') ?>" class="btn btn-primary btn-sm">
+                <i class="fas fa-redo-alt"></i> Beli Ulang Subscription
+              </a>
             <?php endif; ?>
 
           <?php else: ?>

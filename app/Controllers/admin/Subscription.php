@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
@@ -18,6 +19,9 @@ class Subscription extends BaseController
 
     public function index()
     {
+
+        $this->subs->autoExpire();
+
         $data['title'] = 'Kelola Subscription';
         $data['subs']  = $this->subs
             ->select('subscriptions.*, users.username, users.email')
@@ -54,7 +58,7 @@ class Subscription extends BaseController
             'plan_type' => $this->request->getPost('plan_type'),
             'status'    => $this->request->getPost('status'),
             'end_date'  => $this->request->getPost('end_date'),
-            'updated_at'=> date('Y-m-d H:i:s')
+            'updated_at' => date('Y-m-d H:i:s')
         ];
 
         $this->subs->update($id, $data);

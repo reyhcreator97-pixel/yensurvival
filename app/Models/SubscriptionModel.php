@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Models;
 
 use CodeIgniter\Model;
@@ -22,8 +23,17 @@ class SubscriptionModel extends Model
     {
         $today = date('Y-m-d');
         return $this->where('end_date <', $today)
-                    ->where('status', 'active')
-                    ->set(['status' => 'expired'])
-                    ->update();
+            ->where('status', 'active')
+            ->set(['status' => 'expired'])
+            ->update();
+    }
+
+    public function autoExpire()
+    {
+        $today = date('Y-m-d');
+        return $this->where('end_date <', $today)
+            ->where('status !=', 'expired')
+            ->set(['status' => 'expired'])
+            ->update();
     }
 }

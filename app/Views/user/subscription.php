@@ -103,14 +103,27 @@
                                 <td><?= esc(date('Y-m-d', strtotime($bill['created_at']))) ?></td>
                                 <td><?= esc($bill['deskripsi']) ?></td>
                                 <td>
-                                    <?php if ($bill['status'] == 'active'): ?>
-                                        <span class="badge badge-success">Aktif</span>
-                                    <?php elseif ($bill['status'] == 'pending'): ?>
+                                    <?php
+                                    // 🔍 Cek apakah langganan user sudah expired
+                                    $isExpired = false;
+                                    if (!empty($subscription) && strtotime($subscription['end_date']) < time()) {
+                                        $isExpired = true;
+                                    }
+
+                                    if ($bill['status'] == 'pending') : ?>
                                         <span class="badge badge-warning">Pending</span>
-                                    <?php else: ?>
-                                        <span class="badge badge-secondary"><?= ucfirst($bill['status']) ?></span>
+
+                                    <?php elseif ($bill['status'] == 'active' && $isExpired) : ?>
+                                        <span class="badge badge-danger">Expired</span>
+
+                                    <?php elseif ($bill['status'] == 'active') : ?>
+                                        <span class="badge badge-success">Aktif</span>
+
+                                    <?php else : ?>
+                                        <span class="badge badge-light"><?= ucfirst($bill['status']) ?></span>
                                     <?php endif; ?>
                                 </td>
+
                                 <td>
                                     <?php if ($bill['status'] == 'pending'): ?>
                                         <?php

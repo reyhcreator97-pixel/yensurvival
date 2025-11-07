@@ -148,7 +148,7 @@ class Subscription extends BaseController
         ]);
 
         return redirect()->to('/user/subscription')
-            ->with('message', 'Perpanjangan berhasil diajukan. Langganan kamu tetap aktif sampai masa aktif lama berakhir.');
+            ->with('message', 'Pembelian Subscription Berhasil.');
     }
 
 
