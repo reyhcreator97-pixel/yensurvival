@@ -52,7 +52,7 @@ $routes->group('user', ['filter' => 'login'], function ($routes) {
 // ===============================
 // 📦 ROUTES UNTUK PAGE ASET
 // ===============================
-$routes->group('aset', ['filter' => 'login, subscription'], function ($routes) {
+$routes->group('aset', ['filter' => 'buyer'], function ($routes) {
     $routes->get('/', 'Aset::index');               // Halaman utama daftar aset
     $routes->post('store', 'Aset::store');          // Tambah aset baru
     $routes->post('updateNilai', 'Aset::updateNilai'); // Update nilai sekarang
@@ -64,7 +64,7 @@ $routes->group('aset', ['filter' => 'login, subscription'], function ($routes) {
 // ===============================
 // 📦 ROUTES UNTUK PAGE UTANG
 // ===============================
-$routes->group('utang', ['filter' => 'login, subscription'], static function ($routes) {
+$routes->group('utang', ['filter' => 'buyer'], static function ($routes) {
     $routes->get('/', 'Utang::index');
     $routes->post('store', 'Utang::store');
     $routes->post('lunas/(:num)', 'Utang::lunas/$1');
@@ -75,7 +75,7 @@ $routes->group('utang', ['filter' => 'login, subscription'], static function ($r
 // ===============================
 // 📦 ROUTES UNTUK PAGE PIUTANG
 // ===============================
-$routes->group('piutang', ['filter' => 'login, subscription'], static function ($routes) {
+$routes->group('piutang', ['filter' => 'buyer'], static function ($routes) {
     $routes->get('/', 'Piutang::index');
     $routes->post('store', 'Piutang::store');
     $routes->post('lunas/(:num)', 'Piutang::lunas/$1');
@@ -86,7 +86,7 @@ $routes->group('piutang', ['filter' => 'login, subscription'], static function (
 // =============================
 // 📈 ROUTES: INVESTASI
 // =============================
-$routes->group('investasi', ['filter' => 'login, subscription'], function ($routes) {
+$routes->group('investasi', ['filter' => 'buyer'], function ($routes) {
     $routes->get('/', 'Investasi::index');                   // Halaman utama
     $routes->post('store', 'Investasi::store');              // Tambah investasi baru
     $routes->post('updateNilai', 'Investasi::updateNilai');  // Update nilai sekarang
@@ -99,7 +99,7 @@ $routes->group('investasi', ['filter' => 'login, subscription'], function ($rout
 // 📈 ROUTES: KEKAYAAN AWAL
 // =============================
 
-$routes->group('kekayaan-awal', ['filter' => 'login, subscription'], static function ($routes) {
+$routes->group('kekayaan-awal', ['filter' => 'buyer'], static function ($routes) {
 
     $routes->get('/',              'KekayaanAwal::index');
     $routes->post('store',        'KekayaanAwal::store');
@@ -111,7 +111,7 @@ $routes->group('kekayaan-awal', ['filter' => 'login, subscription'], static func
 // 📈 ROUTES: TRANSAKSI
 // =============================
 
-$routes->group('transaksi', ['filter' => 'login, subscription'], static function ($routes) {
+$routes->group('transaksi', ['filter' => 'buyer'], static function ($routes) {
     $routes->get('/',               'Transaksi::index');
     $routes->post('store',          'Transaksi::store');      // pemasukan / pengeluaran
     $routes->post('transfer',       'Transaksi::transfer');   // pindah dana

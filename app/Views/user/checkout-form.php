@@ -77,7 +77,6 @@
     .checkout-card {
       margin: 20px 15px;
       padding: 25px 20px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
     }
 
     h4 {
@@ -137,9 +136,7 @@
 
 <div class="checkout-card">
   <div class="text-center mb-3">
-    <img src="<?= base_url('img/yensurvival3.png') ?>"
-      alt="YEN Survival Logo"
-      class="checkout-logo">
+    <img src="<?= base_url('img/yensurvival3.png') ?>" alt="YEN Survival Logo" class="checkout-logo">
   </div>
   <h4 class="mb-4 text-center">Checkout Subscription</h4>
 
@@ -160,6 +157,7 @@
     <input type="hidden" name="country" value="<?= esc($country) ?>">
     <input type="hidden" name="price" value="<?= $priceYen ?>">
     <input type="hidden" name="priceIDR" value="<?= $priceIDR ?>">
+    <input type="hidden" name="kurs" value="<?= $kurs ?>">
 
     <div class="form-group">
       <label class="font-weight-semibold">Username</label>
@@ -206,62 +204,96 @@
   document.addEventListener('DOMContentLoaded', function() {
     const selectCountry = document.querySelector('select[name="country"]');
     const priceDisplay = document.querySelector('#priceDisplay');
+    const priceInput = document.querySelector('input[name="price"]');
+    const priceIDRInput = document.querySelector('input[name="priceIDR"]');
+    const kursInput = document.querySelector('input[name="kurs"]');
+
     const priceYen = <?= $priceYen ?>;
     const kurs = <?= $kurs ?>;
     const priceIDR = Math.round(priceYen * kurs);
 
     let currentPriceYen = priceYen;
     let currentPriceIDR = priceIDR;
-
-    selectCountry.addEventListener('change', function() {
-      updateDisplay();
-    });
+    let lastDiskonYen = 0;
+    let kuponValid = false;
 
     function updateDisplay() {
       if (selectCountry.value === 'indonesia') {
         priceDisplay.innerHTML = 'Rp ' + currentPriceIDR.toLocaleString('id-ID');
-        document.querySelector('input[name="price"]').value = currentPriceIDR;
+        priceInput.value = currentPriceYen; // simpan dalam Yen (harga global)
+        priceIDRInput.value = currentPriceIDR;
       } else {
         priceDisplay.innerHTML = '¥' + currentPriceYen.toLocaleString('ja-JP');
-        document.querySelector('input[name="price"]').value = currentPriceYen;
+        priceInput.value = currentPriceYen;
+        priceIDRInput.value = currentPriceIDR;
       }
     }
 
-    // ✅ Script Kupon Promo (update harga langsung)
+    selectCountry.addEventListener('change', function() {
+      updateDisplay();
+
+      if (kuponValid) {
+        const fb = document.getElementById('couponFeedback');
+        const labelDiskon = (selectCountry.value === 'indonesia') ?
+          `Rp ${Number(lastDiskonYen * kurs).toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}` :
+          `¥ ${Number(lastDiskonYen).toLocaleString('ja-JP', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+        fb.innerText = fb.dataset.baseText.replace('__DISKON__', labelDiskon);
+      }
+    });
+
+
+    // ✅ Script Kupon Promo (update harga & tampilan diskon langsung)
     document.getElementById('checkCoupon').addEventListener('click', function() {
       const code = document.querySelector('input[name="coupon_code"]').value.trim();
       if (!code) return alert('Masukkan kode kupon!');
+
       fetch('<?= site_url("coupon/check") ?>?code=' + code)
         .then(r => r.json())
         .then(data => {
           const fb = document.getElementById('couponFeedback');
           fb.classList.remove('d-none', 'text-danger', 'text-success');
+
           if (data.status === 'success') {
             fb.classList.add('text-success');
-            fb.innerText = `Kupon valid (${data.used_count}/${data.max_usage || '∞'}) - Diskon ${data.label}`;
-
-            // Hitung diskon langsung
+            let diskonYen = 0;
             if (data.jenis === 'percent') {
-              currentPriceYen = priceYen - (priceYen * data.nilai / 100);
-              currentPriceIDR = priceIDR - (priceIDR * data.nilai / 100);
+              diskonYen = priceYen * data.nilai / 100;
             } else {
-              currentPriceYen = priceYen - data.nilai;
-              currentPriceIDR = priceIDR - (data.nilai * kurs);
+              diskonYen = data.nilai;
             }
+
+            lastDiskonYen = diskonYen;
+            kuponValid = true;
+
+            currentPriceYen = priceYen - diskonYen;
+            currentPriceIDR = priceIDR - (diskonYen * kurs);
             updateDisplay();
 
+            const labelDiskon = (selectCountry.value === 'indonesia') ?
+              `Rp ${Number(diskonYen * kurs).toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}` :
+              `¥ ${Number(diskonYen).toLocaleString('ja-JP', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+
+
+
+            fb.dataset.baseText = `Kupon valid - Diskon __DISKON__`;
+            fb.innerText = fb.dataset.baseText.replace('__DISKON__', labelDiskon);
+
             // Simpan kupon aktif di hidden input
-            if (!document.querySelector('input[name="applied_coupon"]')) {
-              const hidden = document.createElement('input');
+            let hidden = document.querySelector('input[name="applied_coupon"]');
+            if (!hidden) {
+              hidden = document.createElement('input');
               hidden.type = 'hidden';
               hidden.name = 'applied_coupon';
-              hidden.value = code;
               document.querySelector('form').appendChild(hidden);
-            } else {
-              document.querySelector('input[name="applied_coupon"]').value = code;
             }
+            hidden.value = code;
+
+            // 🧩 Update juga nilai hidden harga akhir
+            priceInput.value = currentPriceYen;
+            priceIDRInput.value = currentPriceIDR;
 
           } else {
+            kuponValid = false;
             fb.classList.add('text-danger');
             fb.innerText = data.message || 'Kupon tidak valid.';
           }

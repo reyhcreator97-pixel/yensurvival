@@ -29,6 +29,10 @@ class Filters extends BaseConfig
         'permission' => \Myth\Auth\Filters\PermissionFilter::class,
         'subscription' => \App\Filters\CheckSubscription::class, // Filter Subscription
         'optionalLogin' => \App\Filters\OptionalLogin::class, // Optional Login
+        'buyer'     => [
+            \Myth\Auth\Filters\LoginFilter::class,
+            \App\Filters\CheckSubscription::class,
+        ],
     ];
 
     /**

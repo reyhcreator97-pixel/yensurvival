@@ -14,7 +14,7 @@
             <label>Jenis Diskon</label>
             <select name="jenis" class="form-control">
                 <option value="percent">Persen (%)</option>
-                <option value="fixed">Nominal (Rp)</option>
+                <option value="fixed">Nominal (¥)</option>
             </select>
         </div>
 

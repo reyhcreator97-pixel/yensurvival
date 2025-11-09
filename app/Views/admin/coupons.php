@@ -27,7 +27,14 @@
                         <tr>
                             <td><strong><?= esc($c['kode']); ?></strong></td>
                             <td><?= esc(ucfirst($c['jenis'])); ?></td>
-                            <td><?= ($c['jenis'] == 'percent') ? $c['nilai'] . '%' : 'Rp ' . number_format($c['nilai'], 0, ',', '.'); ?></td>
+                            <td>
+                                <?php if ($c['jenis'] == 'percent'): ?>
+                                    <?= rtrim(rtrim(number_format($c['nilai'], 2), '0'), '.') ?>%
+                                <?php else: ?>
+                                    ¥ <?= number_format($c['nilai'], 0, ',', '.') ?>
+                                <?php endif; ?>
+                            </td>
+
                             <td><?= esc($c['berlaku_mulai']); ?> s/d <?= esc($c['berlaku_sampai']); ?></td>
                             <td><?= $c['used_count']; ?>/<?= $c['max_usage'] > 0 ? $c['max_usage'] : '∞'; ?></td>
                             <td>

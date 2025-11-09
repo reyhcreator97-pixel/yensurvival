@@ -283,7 +283,40 @@
         <div class="text-left">
           <h6>Detail Pembayaran:</h6>
           <p><strong>Plan:</strong> <?= ucfirst($checkout['plan_type']) ?></p>
-          <p><strong>Total:</strong> <?= $checkout['country'] === 'japan' ? '¥' . $checkout['price'] : 'Rp' . $checkout['priceIDR'] ?></p>
+          <p><strong>Total:</strong>
+            <?php
+            $country   = $checkout['country'] ?? 'japan';
+            $kurs      = floatval($checkout['kurs'] ?? 0);
+            $price     = floatval($checkout['price'] ?? 0);
+            $priceIDR  = floatval($checkout['priceIDR'] ?? 0);
+            $discount  = floatval($checkout['discount'] ?? 0);
+
+            // kalau price kosong (misal session belum kebaca), fallback ke harga sebelum diskon
+            if ($price <= 0 && $priceIDR <= 0 && $discount > 0) {
+              // ambil harga asli dari total diskon + harga final kira-kira
+              $price = $discount;
+              $priceIDR = $discount * $kurs;
+            }
+
+            // total akhir
+            $totalYen = max(0, $price);
+            $totalIDR = max(0, $priceIDR);
+
+            // fungsi format
+            function fmtYen($n)
+            {
+              return '¥' . number_format($n, 0, ',', '.');
+            }
+            function fmtRp($n)
+            {
+              return 'Rp' . number_format($n, 0, ',', '.');
+            }
+
+            echo ($country === 'japan') ? fmtYen($totalYen) : fmtRp($totalIDR);
+            ?>
+          </p>
+
+
           <p><strong>Nomor Rekening:</strong></p>
           <p>
             <?= $checkout['country'] === 'japan' ? 'Mitsui Bank: 123-456-789' : 'BCA: 123-456-7890' ?>

@@ -28,7 +28,7 @@ class Checkout extends BaseController
         // Ambil harga dari settings
         $settings = $this->db->table('settings')->get()->getRow();
         $price = ($plan === 'monthly') ? $settings->price_monthly : $settings->price_yearly;
-        $price = number_format($price, 0, '', '');
+        $price = (float)$price;
 
         // Ambil kurs dari controller KursDcom
         $kursCtrl = new KursDcom();
@@ -55,10 +55,8 @@ class Checkout extends BaseController
     {
         $post = $this->request->getPost();
 
-        // Pakai password hashing dari Myth\Auth (biar bisa login normal)
+        // Buat user baru dan hash password
         $passwordHash = Password::hash($post['password'] ?? '');
-
-        // Simpan user baru dan langsung aktif
         $this->userModel->insert([
             'username'      => $post['username'] ?? '',
             'email'         => $post['email'] ?? '',
@@ -66,47 +64,38 @@ class Checkout extends BaseController
             'active'        => 1,
         ]);
 
-        // Ambil ID user baru
         $userId = $this->userModel->getInsertID();
 
-        // Masukkan user baru ke grup "User" (group_id = 2)
+        // Masukkan user baru ke grup "User"
         $this->db->table('auth_groups_users')->insert([
             'user_id'  => $userId,
             'group_id' => 2
         ]);
 
-        // Ambil data plan, negara, dan harga
-        $plan_type = $post['plan_type'] ?? 'monthly';
-        $country   = $post['country'] ?? 'japan';
-        $price     = (float) ($post['price'] ?? 0);
-        $priceIDR  = (float) ($post['priceIDR'] ?? 0);
-        $couponCode = $post['applied_coupon'] ?? null;
-        $discount   = 0;
+        // Ambil data dari form
+        $plan_type   = $post['plan_type'] ?? 'monthly';
+        $country     = $post['country'] ?? 'japan';
+        $kurs        = (float) ($post['kurs'] ?? 0);
+        $priceYen    = (float) ($post['price'] ?? 0); // 💎 harga FINAL dari form
+        $priceIDR    = ($kurs > 0) ? $priceYen * $kurs : 0;
+        $couponCode  = $post['applied_coupon'] ?? null;
+        $discount    = 0;
         $discountLabel = '';
 
-        // === 🔥 Cek Kupon Promo (jika ada) ===
+        // 🔥 Validasi kupon (tanpa hitung ulang diskon)
         if ($couponCode) {
             $couponModel = new CouponModel();
             $coupon = $couponModel
                 ->where('kode', $couponCode)
                 ->where('status', 'active')
-                ->where('berlaku_mulai <=', date('Y-m-d'))
-                ->where('berlaku_sampai >=', date('Y-m-d'))
                 ->first();
 
             if ($coupon) {
-                // Hitung diskon
                 if ($coupon['jenis'] === 'percent') {
-                    $discount = ($price * $coupon['nilai'] / 100);
                     $discountLabel = "{$coupon['nilai']}%";
                 } else {
-                    $discount = $coupon['nilai'];
-                    $discountLabel = 'Rp ' . number_format($coupon['nilai'], 0, ',', '.');
+                    $discountLabel = '¥ ' . number_format($coupon['nilai'], 0, ',', '.');
                 }
-
-                // Kurangi harga
-                $price -= $discount;
-                if ($price < 0) $price = 0;
 
                 // Update penggunaan kupon
                 $couponModel->set('used_count', 'used_count + 1', false)
@@ -115,8 +104,8 @@ class Checkout extends BaseController
             }
         }
 
-        // === Tambahkan ke tabel subscription ===
-        $subscriptionData = [
+        // Simpan ke tabel subscriptions
+        $this->db->table('subscriptions')->insert([
             'user_id'     => $userId,
             'plan_type'   => $plan_type,
             'start_date'  => date('Y-m-d'),
@@ -124,10 +113,9 @@ class Checkout extends BaseController
                 ? date('Y-m-d', strtotime('+1 month'))
                 : date('Y-m-d', strtotime('+1 year')),
             'status'      => 'pending',
-        ];
-        $this->db->table('subscriptions')->insert($subscriptionData);
+        ]);
 
-        // Tambah ke tabel transaksi (pakai harga setelah diskon)
+        // Simpan ke tabel transaksi (harga final Yen)
         $this->db->table('transaksi')->insert([
             'user_id'   => $userId,
             'tanggal'   => date('Y-m-d'),
@@ -135,21 +123,21 @@ class Checkout extends BaseController
             'kategori'  => 'subscription',
             'deskripsi' => 'Pembelian paket ' . ucfirst($plan_type) . ' plan' . ($couponCode ? " (Kupon: {$couponCode})" : ''),
             'status'    => 'pending',
-            'jumlah'    => $price,
+            'jumlah'    => $priceYen, // 💰 Harga final dari form
             'is_initial' => 0,
         ]);
 
-        // === Simpan data ke session sementara ===
+        // Simpan ke session untuk thankyou page
         session()->setFlashdata('checkout-form', [
-            'username'   => $post['username'] ?? '',
-            'email'      => $post['email'] ?? '',
-            'country'    => $country,
-            'plan_type'  => $plan_type,
-            'price'      => $price,
-            'priceIDR'   => $priceIDR,
-            'coupon'     => $couponCode,
-            'discount'   => $discount,
-            'discountLabel' => $discountLabel
+            'username'       => $post['username'] ?? '',
+            'email'          => $post['email'] ?? '',
+            'country'        => $country,
+            'plan_type'      => $plan_type,
+            'price'          => $priceYen,      // Harga akhir dalam Yen
+            'priceIDR'       => $priceIDR,      // Harga akhir dalam Rupiah
+            'kurs'           => $kurs,
+            'coupon'         => $couponCode,
+            'discountLabel'  => $discountLabel
         ]);
 
         return redirect()->to('checkout-form/thankyou');
@@ -160,7 +148,8 @@ class Checkout extends BaseController
         $checkout = session()->getFlashdata('checkout-form');
 
         if (!$checkout || !is_array($checkout)) {
-            return redirect()->to('checkout-form')->with('error', 'Data checkout tidak ditemukan, silakan ulangi proses pembayaran.');
+            return redirect()->to('checkout-form')
+                ->with('error', 'Data checkout tidak ditemukan, silakan ulangi proses pembayaran.');
         }
 
         $settings = $this->db->table('settings')->get()->getRow();
