@@ -6,6 +6,7 @@ use App\Controllers\BaseController;
 use App\Controllers\KursDcom;
 use App\Models\UsersModel;
 use App\Models\SubscriptionModel;
+use App\Models\CouponModel;
 use Myth\Auth\Password;
 
 class Checkout extends BaseController
@@ -77,8 +78,42 @@ class Checkout extends BaseController
         // Ambil data plan, negara, dan harga
         $plan_type = $post['plan_type'] ?? 'monthly';
         $country   = $post['country'] ?? 'japan';
-        $price     = $post['price'] ?? 0;
-        $priceIDR  = $post['priceIDR'] ?? 0;
+        $price     = (float) ($post['price'] ?? 0);
+        $priceIDR  = (float) ($post['priceIDR'] ?? 0);
+        $couponCode = $post['applied_coupon'] ?? null;
+        $discount   = 0;
+        $discountLabel = '';
+
+        // === 🔥 Cek Kupon Promo (jika ada) ===
+        if ($couponCode) {
+            $couponModel = new CouponModel();
+            $coupon = $couponModel
+                ->where('kode', $couponCode)
+                ->where('status', 'active')
+                ->where('berlaku_mulai <=', date('Y-m-d'))
+                ->where('berlaku_sampai >=', date('Y-m-d'))
+                ->first();
+
+            if ($coupon) {
+                // Hitung diskon
+                if ($coupon['jenis'] === 'percent') {
+                    $discount = ($price * $coupon['nilai'] / 100);
+                    $discountLabel = "{$coupon['nilai']}%";
+                } else {
+                    $discount = $coupon['nilai'];
+                    $discountLabel = 'Rp ' . number_format($coupon['nilai'], 0, ',', '.');
+                }
+
+                // Kurangi harga
+                $price -= $discount;
+                if ($price < 0) $price = 0;
+
+                // Update penggunaan kupon
+                $couponModel->set('used_count', 'used_count + 1', false)
+                    ->where('id', $coupon['id'])
+                    ->update();
+            }
+        }
 
         // === Tambahkan ke tabel subscription ===
         $subscriptionData = [
@@ -92,13 +127,13 @@ class Checkout extends BaseController
         ];
         $this->db->table('subscriptions')->insert($subscriptionData);
 
-        // Tambah ke tabel transaksi (pakai harga yen)
+        // Tambah ke tabel transaksi (pakai harga setelah diskon)
         $this->db->table('transaksi')->insert([
             'user_id'   => $userId,
             'tanggal'   => date('Y-m-d'),
             'jenis'     => 'out',
             'kategori'  => 'subscription',
-            'deskripsi' => 'Pembelian paket ' . ucfirst($plan_type) . ' plan',
+            'deskripsi' => 'Pembelian paket ' . ucfirst($plan_type) . ' plan' . ($couponCode ? " (Kupon: {$couponCode})" : ''),
             'status'    => 'pending',
             'jumlah'    => $price,
             'is_initial' => 0,
@@ -112,6 +147,9 @@ class Checkout extends BaseController
             'plan_type'  => $plan_type,
             'price'      => $price,
             'priceIDR'   => $priceIDR,
+            'coupon'     => $couponCode,
+            'discount'   => $discount,
+            'discountLabel' => $discountLabel
         ]);
 
         return redirect()->to('checkout-form/thankyou');

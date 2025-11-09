@@ -16,6 +16,8 @@ $routes->get('/dream', 'Home::dream');
 $routes->get('/kurs', 'KursDcom::index');
 $routes->get('/goldprice', 'GoldPrice::index');
 
+// check coupon user
+$routes->get('coupon/check', 'Coupon::check');
 
 //Checkout dari landing page (tanpa login)
 $routes->group('', ['filter' => 'optionalLogin'], function ($routes) {
@@ -59,8 +61,9 @@ $routes->group('aset', ['filter' => 'login, subscription'], function ($routes) {
 });
 
 
-
-// --- UTANG
+// ===============================
+// 📦 ROUTES UNTUK PAGE UTANG
+// ===============================
 $routes->group('utang', ['filter' => 'login, subscription'], static function ($routes) {
     $routes->get('/', 'Utang::index');
     $routes->post('store', 'Utang::store');
@@ -69,7 +72,9 @@ $routes->group('utang', ['filter' => 'login, subscription'], static function ($r
     $routes->post('storePembayaran', 'Utang::storePembayaran'); // ✅ tambahkan ini
 });
 
-// --- PIUTANG
+// ===============================
+// 📦 ROUTES UNTUK PAGE PIUTANG
+// ===============================
 $routes->group('piutang', ['filter' => 'login, subscription'], static function ($routes) {
     $routes->get('/', 'Piutang::index');
     $routes->post('store', 'Piutang::store');
@@ -124,6 +129,15 @@ $routes->group('admin', ['filter' => 'role:Admin'], function ($routes) {
     $routes->get('index', 'Admin::index');
     $routes->get('dashboard', 'admin\Dashboard::index');
 
+
+    // =========================
+    // 🔹 ADMIN - COUPONS
+    // =========================  
+    $routes->get('coupons', 'Admin\Coupons::index');
+    $routes->get('coupons/create', 'Admin\Coupons::create');
+    $routes->post('coupons/store', 'Admin\Coupons::store');
+    $routes->get('coupons/delete/(:num)', 'Admin\Coupons::delete/$1');
+
     // =========================
     // 🔹 ADMIN - USERS
     // =========================
@@ -146,6 +160,8 @@ $routes->group('admin', ['filter' => 'role:Admin'], function ($routes) {
     $routes->get('subscription/activate/(:num)', 'admin\Subscription::activate/$1');
     $routes->get('subscription/cancel/(:num)', 'admin\Subscription::cancel/$1');
     $routes->get('subscription/extend/(:num)', 'admin\Subscription::extend/$1');
+
+
 
     // =========================
     // 🔹 ADMIN - TRANSAKSI
