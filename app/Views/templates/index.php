@@ -27,9 +27,9 @@
     <!-- Page Wrapper -->
     <div id="wrapper">
 
-<!-- Sidebar --> 
-<?= $this->include('templates/sidebar'); ?>
-<!--End Sidebar-->
+        <!-- Sidebar -->
+        <?= $this->include('templates/sidebar'); ?>
+        <!--End Sidebar-->
 
 
         <!-- Content Wrapper -->
@@ -39,15 +39,15 @@
             <div id="content">
 
                 <!-- Topbar -->
-             <?= $this->include('templates/topbar'); ?>
+                <?= $this->include('templates/topbar'); ?>
                 <!-- End of Topbar -->
 
                 <!-- Begin Page Content -->
 
-<?= $this->renderSection('page-content'); ?>
+                <?= $this->renderSection('page-content'); ?>
 
                 <!-- /.container-fluid -->
-                
+
 
             </div>
             <!-- End of Main Content -->
@@ -79,12 +79,12 @@
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLabel">Ready to Leave?</h5>
+                    <h5 class="modal-title" id="exampleModalLabel">Kamu Ingin Logout?</h5>
                     <button class="close" type="button" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">×</span>
                     </button>
                 </div>
-                <div class="modal-body">Select "Logout" below if you are ready to end your current session.</div>
+                <div class="modal-body">Klik "Logout" Untuk Keluar Dari Aplikasi Ini.</div>
                 <div class="modal-footer">
                     <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancel</button>
                     <a class="btn btn-primary" href="<?= base_url('logout'); ?>">Logout</a>
@@ -102,51 +102,51 @@
 
     <!-- Custom scripts for all pages-->
     <script src="<?= base_url(); ?>/js/sb-admin-2.min.js"></script>
-  
+
     <!-- SweetAlert2 -->
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-<script>
-document.addEventListener("DOMContentLoaded", function() {
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
 
-  // 🔥 Global Alert for Delete Buttons
-  document.querySelectorAll('.btn-delete').forEach(btn => {
-    btn.addEventListener('click', function(e) {
-      e.preventDefault();
-      const url = this.getAttribute('data-url');
+            // 🔥 Global Alert for Delete Buttons
+            document.querySelectorAll('.btn-delete').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const url = this.getAttribute('data-url');
 
-      Swal.fire({
-        title: 'Yakin ingin menghapus data ini?',
-        text: "Data yang dihapus tidak bisa dikembalikan!",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'Ya, Hapus!',
-        cancelButtonText: 'Batal'
-      }).then((result) => {
-        if (result.isConfirmed) {
-          // Optional: tambahin animasi loading sebelum redirect
-          Swal.fire({
-            title: 'Menghapus...',
-            text: 'Mohon tunggu sebentar',
-            allowOutsideClick: false,
-            didOpen: () => Swal.showLoading()
-          });
-          window.location.href = url;
-        }
-      });
-    });
-  });
+                    Swal.fire({
+                        title: 'Yakin ingin menghapus data ini?',
+                        text: "Data yang dihapus tidak bisa dikembalikan!",
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#3085d6',
+                        cancelButtonColor: '#d33',
+                        confirmButtonText: 'Ya, Hapus!',
+                        cancelButtonText: 'Batal'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            // Optional: tambahin animasi loading sebelum redirect
+                            Swal.fire({
+                                title: 'Menghapus...',
+                                text: 'Mohon tunggu sebentar',
+                                allowOutsideClick: false,
+                                didOpen: () => Swal.showLoading()
+                            });
+                            window.location.href = url;
+                        }
+                    });
+                });
+            });
 
-});
-</script>
+        });
+    </script>
 
-<?php if (session()->getFlashdata('login_success')): ?>
-<script>
-Swal.fire({
-    title: 'Berhasil!',
-    html: `
+    <?php if (session()->getFlashdata('login_success')): ?>
+        <script>
+            Swal.fire({
+                title: 'Berhasil!',
+                html: `
         <div style="display:flex; flex-direction:column; align-items:center; justify-content:center;">
             <div class="spinner-border text-success" role="status" style="width: 2.5rem; height: 2.5rem; margin-bottom:10px;">
                 <span class="sr-only">Loading...</span>
@@ -159,56 +159,56 @@ Swal.fire({
             </div>
         </div>
     `,
-    showConfirmButton: false,
-    timer: 2000,
-    allowOutsideClick: false,
-    
-});
+                showConfirmButton: false,
+                timer: 2000,
+                allowOutsideClick: false,
 
-// progress bar animasi halus
-const style = document.createElement('style');
-style.innerHTML = `
+            });
+
+            // progress bar animasi halus
+            const style = document.createElement('style');
+            style.innerHTML = `
 @keyframes progressAnim {
     from { width: 0%; }
     to { width: 100%; }
 }`;
-document.head.appendChild(style);
-</script>
-<?php endif; ?>
+            document.head.appendChild(style);
+        </script>
+    <?php endif; ?>
 
-<?php if (session()->getFlashdata('message')): ?>
-<script>
-Swal.fire({
-    icon: 'success',
-    title: 'Berhasil!',
-    html: '<?= (session('message')) ?>',
-    confirmButtonColor: '#3085d6',
-});
-</script>
-<?php endif; ?>
+    <?php if (session()->getFlashdata('message')): ?>
+        <script>
+            Swal.fire({
+                icon: 'success',
+                title: 'Berhasil!',
+                html: '<?= (session('message')) ?>',
+                confirmButtonColor: '#3085d6',
+            });
+        </script>
+    <?php endif; ?>
 
-<?php if (session()->getFlashdata('error')): ?>
-<script>
-Swal.fire({
-    icon: 'error',
-    title: 'Gagal!',
-    text: '<?= esc(session('error')) ?>',
-    confirmButtonColor: '#d33',
-});
-</script>
-<?php endif; ?>
+    <?php if (session()->getFlashdata('error')): ?>
+        <script>
+            Swal.fire({
+                icon: 'error',
+                title: 'Gagal!',
+                text: '<?= esc(session('error')) ?>',
+                confirmButtonColor: '#d33',
+            });
+        </script>
+    <?php endif; ?>
 
 
 
     <?= $this->renderSection('scripts'); ?>
 
-    <?php if(isset($belumIsi) && $belumIsi): ?>
+    <?php if (isset($belumIsi) && $belumIsi): ?>
         <script>
-            $(document).ready(function(){
+            $(document).ready(function() {
                 $('#setupModal').modal('show');
             });
-            </script>
-            <?php endif; ?>
+        </script>
+    <?php endif; ?>
 
 
 </body>

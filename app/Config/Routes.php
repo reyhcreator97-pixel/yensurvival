@@ -35,6 +35,7 @@ $routes->group('user', ['filter' => 'login'], function ($routes) {
     $routes->get('dashboard', 'User::dashboard');
     $routes->get('panel', 'user\Panel::index');
     $routes->post('panel/changePassword', 'user\Panel::changePassword');
+    $routes->get('dashboard/chart', 'User\Dashboard::getChartData');
 });
 
 // ===============================
