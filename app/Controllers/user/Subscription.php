@@ -3,8 +3,10 @@
 namespace App\Controllers\User;
 
 use App\Controllers\BaseController;
+use App\Controllers\KursDcom;
 use App\Models\SubscriptionModel;
 use App\Models\TransaksiModel;
+use App\Models\CouponModel;
 use Config\Database;
 
 class Subscription extends BaseController
@@ -64,10 +66,53 @@ class Subscription extends BaseController
     {
         $userId = user_id();
         $settings = $this->db->table('settings')->get()->getRow();
+        $couponModel = new CouponModel();
 
-        $price = ($plan === 'monthly') ? $settings->price_monthly : $settings->price_yearly;
+        // === Ambil harga awal plan ===
+        $priceYen = ($plan === 'monthly') ? (float)$settings->price_monthly : (float)$settings->price_yearly;
         $duration = ($plan === 'monthly') ? 30 : 365;
 
+        // === Ambil kurs real-time ===
+        $kursCtrl = new KursDcom();
+        $kurs = $kursCtrl->getKurs();
+        $kurs = $kurs > 0 ? $kurs : 110;
+        $priceIDR = $priceYen * $kurs;
+
+        // === Ambil kode kupon dari GET / POST (fix utama) ===
+        $couponCode = $this->request->getGet('coupon') ?? $this->request->getPost('applied_coupon');
+        $discount = 0;
+        $discountLabel = '';
+
+        // === Hitung diskon kupon kalau ada ===
+        if ($couponCode) {
+            $coupon = $couponModel
+                ->where('kode', $couponCode)
+                ->where('status', 'active')
+                ->where('berlaku_mulai <=', date('Y-m-d'))
+                ->where('berlaku_sampai >=', date('Y-m-d'))
+                ->first();
+
+            if ($coupon) {
+                if ($coupon['jenis'] === 'percent') {
+                    $discount = ($priceYen * $coupon['nilai'] / 100);
+                    $discountLabel = "{$coupon['nilai']}%";
+                } else {
+                    $discount = (float)$coupon['nilai'];
+                    $discountLabel = '¥ ' . number_format($coupon['nilai'], 0, ',', '.');
+                }
+
+                // Hitung ulang harga
+                $priceYen = max(0, $priceYen - $discount);
+                $priceIDR = max(0, $priceYen * $kurs);
+
+                // Update penggunaan kupon
+                $couponModel->set('used_count', 'used_count + 1', false)
+                    ->where('id', $coupon['id'])
+                    ->update();
+            }
+        }
+
+        // === Tanggal dan durasi ===
         $startDate = date('Y-m-d');
         $endDate   = date('Y-m-d', strtotime("+{$duration} days"));
         $today     = date('Y-m-d');
@@ -75,7 +120,7 @@ class Subscription extends BaseController
         // 🔥 Cek subscription aktif user
         $activeSub = $this->subscriptionModel
             ->where('user_id', $userId)
-            ->whereIn('status', ['active', 'pending']) // include pending agar bisa extend sebelum approve
+            ->whereIn('status', ['active', 'pending'])
             ->orderBy('end_date', 'DESC')
             ->first();
 
@@ -84,7 +129,7 @@ class Subscription extends BaseController
             $this->subscriptionModel->insert([
                 'user_id'    => $userId,
                 'plan_type'  => $plan,
-                'price'      => $price,
+                'price'      => $priceYen,
                 'start_date' => $startDate,
                 'end_date'   => $endDate,
                 'status'     => 'pending'
@@ -95,14 +140,12 @@ class Subscription extends BaseController
 
             // 🔹 Jika masih aktif dan beli plan yang sama → perpanjang
             if ($currentPlan === $plan) {
-                // ✅ FIX: Tambah dari tanggal akhir lama agar sisa hari tidak hilang
                 $base = (strtotime($currentEnd) > strtotime($today)) ? $currentEnd : $today;
 
                 $newEnd = ($plan === 'monthly')
                     ? date('Y-m-d', strtotime($base . ' +30 days'))
                     : date('Y-m-d', strtotime($base . ' +365 days'));
 
-                // ✅ Jangan ubah status jadi pending biar user masih punya akses
                 $this->subscriptionModel->update($activeSub['id'], [
                     'end_date' => $newEnd,
                 ]);
@@ -110,11 +153,9 @@ class Subscription extends BaseController
 
             // 🔹 Jika upgrade (monthly → yearly)
             elseif ($currentPlan === 'monthly' && $plan === 'yearly') {
-                // ✅ FIX: Tambah dari sisa langganan lama agar gak kehilangan waktu
                 $base = (strtotime($currentEnd) > strtotime($today)) ? $currentEnd : $today;
                 $newEnd = date('Y-m-d', strtotime($base . ' +365 days'));
 
-                // ✅ Gak ubah status ke pending, user masih bisa akses
                 $this->subscriptionModel->update($activeSub['id'], [
                     'plan_type' => 'yearly',
                     'end_date'  => $newEnd,
@@ -126,7 +167,7 @@ class Subscription extends BaseController
                 $this->subscriptionModel->insert([
                     'user_id'    => $userId,
                     'plan_type'  => $plan,
-                    'price'      => $price,
+                    'price'      => $priceYen,
                     'start_date' => $startDate,
                     'end_date'   => $endDate,
                     'status'     => 'pending'
@@ -134,23 +175,22 @@ class Subscription extends BaseController
             }
         }
 
-        // 🔥 Catat ke tabel transaksi (tetap pending, tapi gak ubah akses)
+        // === Catat transaksi (harga final + kupon kalau ada) ===
         $this->transaksiModel->insert([
             'user_id'   => $userId,
             'tanggal'   => date('Y-m-d'),
             'jenis'     => 'out',
             'kategori'  => 'subscription',
-            'deskripsi' => ucfirst($plan) . ' Plan Subscription',
-            'jumlah'    => $price,
+            'deskripsi' => ucfirst($plan) . ' Plan Subscription' . ($couponCode ? " (Kupon: {$couponCode})" : ''),
+            'jumlah'    => $priceYen,
             'status'    => 'pending',
             'created_at' => date('Y-m-d H:i:s'),
             'updated_at' => date('Y-m-d H:i:s')
         ]);
 
         return redirect()->to('/user/subscription')
-            ->with('message', 'Pembelian Subscription Berhasil.');
+            ->with('message', 'Pembelian Subscription Berhasil.' . ($couponCode ? " Dengan Diskon : {$discountLabel}" : ''));
     }
-
 
     public function checkout($plan)
     {

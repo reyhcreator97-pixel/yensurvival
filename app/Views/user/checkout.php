@@ -20,7 +20,22 @@
           </p>
 
           <hr>
-          <div class="form-group">
+
+          <!-- ✅ Input Kupon Promo -->
+          <div class="form-group mt-3">
+            <label class="font-weight-bold">Kupon Promo (Opsional)</label>
+            <div class="input-group">
+              <input type="text" id="coupon_code" class="form-control" placeholder="Masukkan kode kupon">
+              <div class="input-group-append">
+                <button type="button" id="checkCoupon" class="btn btn-outline-primary">Cek Kupon</button>
+              </div>
+            </div>
+            <small id="couponFeedback" class="form-text text-success d-none"></small>
+          </div>
+
+          <input type="hidden" id="applied_coupon" value="">
+
+          <div class="form-group mt-4">
             <label class="font-weight-bold">Pilih Negara Pembayaran</label>
             <select class="form-control" id="countrySelect" required>
               <option value="">-- Pilih Negara --</option>
@@ -60,77 +75,151 @@
   </div>
 </div>
 
-<script>
-document.addEventListener("DOMContentLoaded", function() {
-  const select = document.getElementById('countrySelect');
-  const info = document.getElementById('paymentInfo');
-  const japan = document.getElementById('japanAccount');
-  const indo = document.getElementById('indoAccount');
-  const buyBtn = document.getElementById('buyBtn');
-
-  select.addEventListener('change', function() {
-    info.style.display = 'block';
-    japan.classList.add('d-none');
-    indo.classList.add('d-none');
-
-    if (this.value === 'japan') {
-      japan.classList.remove('d-none');
-      buyBtn.classList.remove('disabled');
-      buyBtn.href = "<?= site_url('user/subscription/buy/' . strtolower($plan)) ?>?country=japan";
-    } else if (this.value === 'indonesia') {
-      indo.classList.remove('d-none');
-      buyBtn.classList.remove('disabled');
-      buyBtn.href = "<?= site_url('user/subscription/buy/' . strtolower($plan)) ?>?country=indonesia";
-    } else {
-      buyBtn.classList.add('disabled');
-      buyBtn.href = "#";
-    }
-  });
-});
-</script>
+<!-- ✅ SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    const countrySelect = document.getElementById('countrySelect');
-    const paymentInfo = document.getElementById('paymentInfo');
-    const japanAccount = document.getElementById('japanAccount');
-    const indoAccount = document.getElementById('indoAccount');
-    const priceElement = document.getElementById('priceValue');
-    const currencyElement = document.getElementById('currencySymbol');
+  document.addEventListener("DOMContentLoaded", function() {
+    const select = document.getElementById('countrySelect');
+    const info = document.getElementById('paymentInfo');
+    const japan = document.getElementById('japanAccount');
+    const indo = document.getElementById('indoAccount');
+    const buyBtn = document.getElementById('buyBtn');
+    const priceEl = document.getElementById('priceValue');
+    const symbolEl = document.getElementById('currencySymbol');
+    const appliedCoupon = document.getElementById('applied_coupon');
 
-    // ambil variabel kurs dan harga asli dari PHP
-    const kursJPYtoIDR = <?= $kurs ?>;
+    const kurs = <?= $kurs ?>;
     const originalPrice = <?= $price ?>;
+    let currentPrice = originalPrice;
+    let lastDiskon = 0;
+    let kuponValid = false;
+    let currentCoupon = ''; // 🧩 simpan kupon aktif
 
-    // fungsi helper buat format angka
-    const formatIDR = (num) => new Intl.NumberFormat('id-ID').format(num);
-    const formatJPY = (num) => new Intl.NumberFormat('ja-JP').format(num);
-
-    countrySelect.addEventListener('change', function() {
-        const selected = this.value;
-        paymentInfo.style.display = 'block';
-
-        if (selected === 'indonesia') {
-            japanAccount.classList.add('d-none');
-            indoAccount.classList.remove('d-none');
-
-            // konversi harga ke IDR
-            const converted = Math.round(originalPrice * kursJPYtoIDR);
-            priceElement.textContent = formatIDR(converted);
-            currencyElement.textContent = 'Rp';
-        } else if (selected === 'japan') {
-            indoAccount.classList.add('d-none');
-            japanAccount.classList.remove('d-none');
-
-            // kembali ke yen
-            priceElement.textContent = formatJPY(originalPrice);
-            currencyElement.textContent = '¥';
-        } else {
-            paymentInfo.style.display = 'none';
-        }
+    // format helper
+    const formatYen = (n) => '¥ ' + parseInt(n).toLocaleString('ja-JP', {
+      minimumFractionDigits: 0
     });
-});
+    const formatRp = (n) => 'Rp ' + parseInt(n).toLocaleString('id-ID', {
+      minimumFractionDigits: 0
+    });
+
+    // update harga
+    function updatePriceDisplay(country) {
+      if (country === 'indonesia') {
+        priceEl.textContent = parseInt(currentPrice * kurs).toLocaleString('id-ID', {
+          minimumFractionDigits: 0
+        });
+        symbolEl.textContent = 'Rp';
+      } else {
+        priceEl.textContent = parseInt(currentPrice).toLocaleString('ja-JP', {
+          minimumFractionDigits: 0
+        });
+        symbolEl.textContent = '¥';
+      }
+
+      // 🧩 update feedback kupon sesuai negara
+      const fb = document.getElementById('couponFeedback');
+      if (kuponValid && fb) {
+        const labelDiskon = (country === 'indonesia') ?
+          formatRp(lastDiskon * kurs) :
+          formatYen(lastDiskon);
+        fb.innerText = `Kupon valid - Diskon ${labelDiskon}`;
+      }
+
+      // 🧩 update link beli sesuai negara + kupon
+      const baseHref = "<?= site_url('user/subscription/buy/' . strtolower($plan)) ?>";
+      const couponParam = currentCoupon ? `?coupon=${encodeURIComponent(currentCoupon)}` : '';
+      buyBtn.href = baseHref + couponParam;
+    }
+
+    // perubahan negara
+    select.addEventListener('change', function() {
+      info.style.display = 'block';
+      japan.classList.add('d-none');
+      indo.classList.add('d-none');
+
+      if (this.value === 'japan') japan.classList.remove('d-none');
+      if (this.value === 'indonesia') indo.classList.remove('d-none');
+
+      buyBtn.classList.remove('disabled');
+      updatePriceDisplay(this.value);
+    });
+
+    // cek kupon
+    document.getElementById('checkCoupon').addEventListener('click', function() {
+      const code = document.getElementById('coupon_code').value.trim();
+      const fb = document.getElementById('couponFeedback');
+
+      if (!code) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Oops!',
+          text: 'Masukkan kode kupon terlebih dahulu.',
+          confirmButtonColor: '#007bff'
+        });
+        return;
+      }
+
+      fetch('<?= site_url("coupon/check") ?>?code=' + code)
+        .then(r => r.json())
+        .then(data => {
+          fb.classList.remove('d-none', 'text-danger', 'text-success');
+
+          if (data.status === 'success') {
+            fb.classList.add('text-success');
+            let diskon = (data.jenis === 'percent') ?
+              originalPrice * data.nilai / 100 :
+              data.nilai;
+
+            lastDiskon = Math.round(diskon);
+            kuponValid = true;
+            currentPrice = Math.max(0, originalPrice - diskon);
+            currentCoupon = code; // 🧩 simpan kupon aktif
+            appliedCoupon.value = code;
+
+            const labelDiskon = (select.value === 'indonesia') ?
+              formatRp(diskon * kurs) :
+              formatYen(diskon);
+
+            fb.innerText = `Kupon valid - Diskon ${labelDiskon}`;
+            updatePriceDisplay(select.value);
+
+            Swal.fire({
+              icon: 'success',
+              title: 'Kupon Diterapkan!',
+              text: `Selamat Kamu Dapat Diskon : ${labelDiskon}`,
+              confirmButtonColor: '#28a745'
+            });
+          } else {
+            fb.classList.add('text-danger');
+            fb.innerText = data.message || 'Kupon tidak valid.';
+            kuponValid = false;
+            currentCoupon = '';
+            appliedCoupon.value = '';
+            currentPrice = originalPrice;
+            updatePriceDisplay(select.value);
+
+            Swal.fire({
+              icon: 'error',
+              title: 'Kupon Tidak Valid',
+              text: data.message || 'Kode kupon tidak berlaku atau sudah kadaluarsa.',
+              confirmButtonColor: '#d33'
+            });
+          }
+        })
+        .catch(() => {
+          Swal.fire({
+            icon: 'error',
+            title: 'Gagal!',
+            text: 'Terjadi kesalahan saat memeriksa kupon, silakan coba lagi.',
+            confirmButtonColor: '#d33'
+          });
+        });
+    });
+  });
 </script>
+
+
 
 <?= $this->endSection(); ?>
-
