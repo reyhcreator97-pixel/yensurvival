@@ -57,22 +57,47 @@ class User extends BaseController
 
         // Total Utang = sisa semua utang
         $totalUtang = 0.0;
-        foreach ($utangM->where('user_id', $uid)->findAll() as $u) {
+
+        // Ambil semua utang user
+        $__utangList = $utangM->where('user_id', $uid)->findAll();
+        $__namaUtangExists = [];
+
+        foreach ($__utangList as $u) {
             $jumlah  = (float)($u['jumlah']  ?? 0);
             $dibayar = (float)($u['dibayar'] ?? 0);
-            $sisa    = $jumlah - $dibayar;
-            if ($sisa > 0) $totalUtang += $sisa;
+            $sisa    = max(0, $jumlah - $dibayar);
+
+            // hanya hitung jika masih ada sisa & belum lunas
+            if ($sisa > 0 && (($u['status'] ?? 'belum') !== 'lunas')) {
+                $totalUtang += $sisa;
+            }
+
+            // simpan nama untuk hindari duplikasi dari kekayaan awal
+            $nm = strtolower(trim($u['nama'] ?? ''));
+            if ($nm !== '') $__namaUtangExists[$nm] = true;
         }
-        // ✅ Tambahan untuk ambil data utang dari kekayaan_awal
+
+        // ✅ Tambahan untuk ambil data utang dari kekayaan_awal (tanpa dobel)
         $utangAwal = $items->where([
             'user_id'  => $uid,
             'kategori' => 'utang'
         ])->findAll();
+
         foreach ($utangAwal as $r) {
+            $nmAwal = strtolower(trim($r['deskripsi'] ?? ''));
+            if ($nmAwal === '') continue;
+
+            // skip kalau sudah ada utang aktif dengan nama yang sama
+            if (isset($__namaUtangExists[$nmAwal])) continue;
+
             $jumlah = (float)($r['jumlah'] ?? 0);
-            $sisa   = $jumlah;
-            if ($sisa > 0) $totalUtang += $sisa;
+            if ($jumlah > 0) {
+                // kekayaan awal belum punya 'dibayar', jadi sisa = jumlah
+                $totalUtang += $jumlah;
+            }
         }
+
+
 
         // Total Piutang = sisa semua piutang
         $totalPiutang = 0.0;
@@ -115,7 +140,6 @@ class User extends BaseController
                 $totalPiutang += $jumlah;
             }
         }
-
 
 
         //--- Prioritaskan saldo_terkini kalau ada, fallback ke jumlah

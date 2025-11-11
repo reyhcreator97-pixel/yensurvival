@@ -88,9 +88,17 @@ class Utang extends BaseController
             }
         }
 
-        // Hitung total
-        $totalUtang = array_sum(array_column($final, 'jumlah'));
-        $totalBayar = array_sum(array_map(fn($r) => (float)($r['dibayar'] ?? 0), $final));
+        // --- Hitung total
+        $totalUtang = array_sum(array_map(function ($r) {
+            $j = (float)($r['jumlah']  ?? 0);
+            $d = (float)($r['dibayar'] ?? 0);
+            return max(0, $j - $d); // sisa aktif aja
+        }, $final));
+
+        $totalBayar = array_sum(array_map(function ($r) {
+            return (float)($r['dibayar'] ?? 0);
+        }, $final));
+
 
         return view('utang/index', [
             'title'       => 'Utang',
