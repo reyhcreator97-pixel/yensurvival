@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Controllers;
 
 use App\Models\UtangModel;
@@ -27,25 +28,42 @@ class Utang extends BaseController
     {
         $uid = $this->uid();
 
-        // --- Ambil data utang user
+        // Ambil utang dari tabel utang
         $listUtang = $this->utang->where('user_id', $uid)->findAll();
 
-        // --- Ambil data dari kekayaan awal kategori utang
+        // Ambil kekayaan awal kategori utang
         $fromKekayaan = $this->items
             ->where('user_id', $uid)
             ->where('kategori', 'utang')
             ->findAll();
 
-        // --- Gabungkan tanpa duplikasi nama
+        // Ambil akun (uang)
+        $akunList = $this->items
+            ->where('user_id', $uid)
+            ->where('kategori', 'uang')
+            ->findAll();
+
+        // Buat map id => nama akun
+        $akunMap = [];
+        foreach ($akunList as $a) {
+            $akunMap[$a['id']] = $a['deskripsi'];
+        }
+
+        // Gabungkan data tanpa duplikat nama (prioritaskan utang tabel utama)
         $final = $listUtang;
+
         foreach ($fromKekayaan as $k) {
+            $namaKekayaan = trim(strtolower($k['deskripsi']));
+
             $exists = false;
             foreach ($listUtang as $u) {
-                if (trim(strtolower($u['nama'])) === trim(strtolower($k['deskripsi']))) {
+                $namaUtang = trim(strtolower($u['nama'] ?? ''));
+                if ($namaUtang === $namaKekayaan) {
                     $exists = true;
                     break;
                 }
             }
+
             if (!$exists) {
                 $final[] = [
                     'id'          => 0,
@@ -61,28 +79,29 @@ class Utang extends BaseController
             }
         }
 
-        // --- Ambil daftar akun (uang)
-        $akun = $this->items
-            ->where('user_id', $uid)
-            ->where('kategori', 'uang')
-            ->findAll();
-
-        // --- Hitung total
-        $totalUtang = 0;
-        $totalBayar = 0;
-        foreach ($final as $r) {
-            $totalUtang += (float)$r['jumlah'];
-            $totalBayar += (float)($r['dibayar'] ?? 0);
+        // Tambahkan nama akun ke setiap data
+        foreach ($final as &$r) {
+            if (!empty($r['akun_id']) && isset($akunMap[$r['akun_id']])) {
+                $r['nama_akun'] = $akunMap[$r['akun_id']];
+            } else {
+                $r['nama_akun'] = '-';
+            }
         }
+
+        // Hitung total
+        $totalUtang = array_sum(array_column($final, 'jumlah'));
+        $totalBayar = array_sum(array_map(fn($r) => (float)($r['dibayar'] ?? 0), $final));
 
         return view('utang/index', [
             'title'       => 'Utang',
             'list'        => $final,
-            'akun'        => $akun,
+            'akun'        => $akunList,
             'totalUtang'  => $totalUtang,
             'totalBayar'  => $totalBayar,
         ]);
     }
+
+
     public function store()
     {
         $uid       = $this->uid();
@@ -129,16 +148,16 @@ class Utang extends BaseController
         // Kalau data dari kekayaan awal (id=0) → bikin entri baru di tabel utang
         if ($utangId === 0) {
             $nama = $this->request->getPost('nama') ?? 'Utang Kekayaan Awal';
-        
+
             // ✅ ambil jumlah utang asli dari kekayaan_items
             $fromKekayaan = $this->items
                 ->where('user_id', $uid)
                 ->where('kategori', 'utang')
                 ->where('deskripsi', $nama)
                 ->first();
-        
+
             $jumlahAsli = $fromKekayaan['jumlah'] ?? $jumlah;
-        
+
             $utangId = $this->utang->insert([
                 'user_id' => $uid,
                 'akun_id' => $akunId,
@@ -150,7 +169,7 @@ class Utang extends BaseController
                 'status' => 'belum'
             ]);
         }
-        
+
         $utang = $this->utang->find($utangId);
         if (!$utang || $utang['user_id'] != $uid) {
             return redirect()->back()->with('error', 'Data utang tidak ditemukan.');

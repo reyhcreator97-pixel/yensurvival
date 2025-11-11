@@ -10,21 +10,6 @@
     </button>
   </div>
 
-  <!-- Flash message -->
-  <?php if (session()->getFlashdata('message')): ?>
-    <div class="alert alert-success alert-dismissible fade show shadow-sm">
-      <?= esc(session('message')) ?>
-      <button type="button" class="close" data-dismiss="alert">&times;</button>
-    </div>
-  <?php endif; ?>
-
-  <?php if (session()->getFlashdata('error')): ?>
-    <div class="alert alert-danger alert-dismissible fade show shadow-sm">
-      <?= esc(session('error')) ?>
-      <button type="button" class="close" data-dismiss="alert">&times;</button>
-    </div>
-  <?php endif; ?>
-
   <!-- CARD TOTAL UTANG -->
   <div class="row mb-3">
     <div class="col-md-4 mb-3">
@@ -59,47 +44,50 @@
             </tr>
           </thead>
           <tbody>
-          <?php if (empty($list)): ?>
-            <tr><td colspan="8" class="text-center text-muted">Belum ada data utang.</td></tr>
-          <?php else: foreach ($list as $r): 
-              $tgl    = $r['tanggal'] ?? '-';
-              $nama   = $r['nama'] ?: ($r['deskripsi'] ?? '-');
-              $akunNm = isset($r['akun_id']) ? ($akunNama[$r['akun_id']] ?? '-') : '-';
-              $jumlah = (float)($r['jumlah'] ?? 0);
-              $dibayar = (float)($r['dibayar'] ?? 0);
-              $sisa   = $jumlah - $dibayar;
-              $aktif  = ($r['status'] ?? 'belum') !== 'lunas';
-          ?>
-            <tr>
-              <td><?= esc($tgl) ?></td>
-              <td><?= esc($nama) ?></td>
-              <td><?= esc($akunNm) ?></td>
-              <td class="text-right">¥<?= number_format($jumlah, 0) ?></td>
-              <td class="text-right">¥<?= number_format($dibayar, 0) ?></td>
-              <td class="text-right <?= $sisa > 0 ? 'text-danger' : 'text-success' ?>">¥<?= number_format($sisa, 0) ?></td>
-              <td>
-                <?php if ($aktif): ?>
-                  <span class="badge badge-warning px-2 py-1">Belum</span>
-                <?php else: ?>
-                  <span class="badge badge-success px-2 py-1">Lunas</span>
-                <?php endif; ?>
-              </td>
-              <td class="text-right">
-                <?php if ($aktif): ?>
-                  <button class="btn btn-sm btn-info"
-                    onclick="openBayarModal('<?= $r['id'] ?>', '<?= esc($r['nama']) ?>', '<?= $sisa ?>')">
-                    Bayar
-                  </button>
-                <?php else: ?>
-                  <button type="button" 
-                                      class="btn btn-xs btn-outline-danger btn-delete"
-                                      data-url="<?= site_url('utang/delete/' . $r['id']) ?>">
-                                      <i class="fas fa-trash"></i>
-                                    </button>
-                <?php endif; ?>
-              </td>
-            </tr>
-          <?php endforeach; endif; ?>
+            <?php if (empty($list)): ?>
+              <tr>
+                <td colspan="8" class="text-center text-muted">Belum ada data utang.</td>
+              </tr>
+              <?php else: foreach ($list as $r):
+                $tgl    = $r['tanggal'] ?? '-';
+                $nama   = $r['nama'] ?: ($r['deskripsi'] ?? '-');
+                $akunNm = isset($r['akun_id']) ? ($akunNama[$r['akun_id']] ?? '-') : '-';
+                $jumlah = (float)($r['jumlah'] ?? 0);
+                $dibayar = (float)($r['dibayar'] ?? 0);
+                $sisa   = $jumlah - $dibayar;
+                $aktif  = ($r['status'] ?? 'belum') !== 'lunas';
+              ?>
+                <tr>
+                  <td><?= esc($tgl) ?></td>
+                  <td><?= esc($nama) ?></td>
+                  <td><?= esc($r['nama_akun'] ?? '-') ?></td>
+                  <td class="text-right">¥<?= number_format($jumlah, 0) ?></td>
+                  <td class="text-right">¥<?= number_format($dibayar, 0) ?></td>
+                  <td class="text-right <?= $sisa > 0 ? 'text-danger' : 'text-success' ?>">¥<?= number_format($sisa, 0) ?></td>
+                  <td>
+                    <?php if ($aktif): ?>
+                      <span class="badge badge-warning px-2 py-1">Belum</span>
+                    <?php else: ?>
+                      <span class="badge badge-success px-2 py-1">Lunas</span>
+                    <?php endif; ?>
+                  </td>
+                  <td class="text-right">
+                    <?php if ($aktif): ?>
+                      <button class="btn btn-sm btn-info"
+                        onclick="openBayarModal('<?= $r['id'] ?>', '<?= esc($r['nama']) ?>', '<?= $sisa ?>')">
+                        Bayar
+                      </button>
+                    <?php else: ?>
+                      <button type="button"
+                        class="btn btn-xs btn-outline-danger btn-delete"
+                        data-url="<?= site_url('utang/delete/' . $r['id']) ?>">
+                        <i class="fas fa-trash"></i>
+                      </button>
+                    <?php endif; ?>
+                  </td>
+                </tr>
+            <?php endforeach;
+            endif; ?>
           </tbody>
         </table>
       </div>
@@ -135,7 +123,7 @@
             <label>Bayar dari Akun</label>
             <select name="akun_id" class="form-control" required>
               <option value="">-- Pilih Akun --</option>
-              <?php foreach($akun as $a): ?>
+              <?php foreach ($akun as $a): ?>
                 <option value="<?= $a['id'] ?>"><?= esc($a['deskripsi']) ?> (Saldo: ¥<?= number_format($a['saldo_terkini'] ?? 0, 0) ?>)</option>
               <?php endforeach; ?>
             </select>
@@ -191,13 +179,13 @@
 </div>
 
 <script>
-function openBayarModal(id, nama, max) {
-  document.getElementById('utang_id').value = id;
-  document.getElementById('utang_nama').value = nama;  // hidden untuk backend
-  document.getElementById('utang_nama_display').value = nama;  // tampil di modal
-  document.getElementById('jumlah_bayar').setAttribute('max', max);
-  $('#modalBayar').modal('show');
-}
+  function openBayarModal(id, nama, max) {
+    document.getElementById('utang_id').value = id;
+    document.getElementById('utang_nama').value = nama; // hidden untuk backend
+    document.getElementById('utang_nama_display').value = nama; // tampil di modal
+    document.getElementById('jumlah_bayar').setAttribute('max', max);
+    $('#modalBayar').modal('show');
+  }
 </script>
 
 <?= $this->endSection(); ?>

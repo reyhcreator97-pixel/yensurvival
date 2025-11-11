@@ -44,47 +44,50 @@
             </tr>
           </thead>
           <tbody>
-          <?php if (empty($list)): ?>
-            <tr><td colspan="8" class="text-center text-muted">Belum ada data piutang.</td></tr>
-          <?php else: foreach ($list as $r): 
-              $tgl    = $r['tanggal'] ?? '-';
-              $nama   = $r['nama'] ?: ($r['deskripsi'] ?? '-');
-              $akunNm = isset($r['akun_id']) ? ($akunNama[$r['akun_id']] ?? '-') : '-';
-              $jumlah = (float)($r['jumlah'] ?? 0);
-              $diterima = (float)($r['dibayar'] ?? 0);
-              $sisa   = $jumlah - $diterima;
-              $aktif  = ($r['status'] ?? 'belum') !== 'lunas';
-          ?>
-            <tr>
-              <td><?= esc($tgl) ?></td>
-              <td><?= esc($nama) ?></td>
-              <td><?= esc($akunNm) ?></td>
-              <td class="text-right">¥<?= number_format($jumlah, 0) ?></td>
-              <td class="text-right">¥<?= number_format($diterima, 0) ?></td>
-              <td class="text-right <?= $sisa > 0 ? 'text-danger' : 'text-success' ?>">¥<?= number_format($sisa, 0) ?></td>
-              <td>
-                <?php if ($aktif): ?>
-                  <span class="badge badge-warning px-2 py-1">Belum</span>
-                <?php else: ?>
-                  <span class="badge badge-success px-2 py-1">Lunas</span>
-                <?php endif; ?>
-              </td>
-              <td class="text-right">
-                <?php if ($aktif): ?>
-                  <button class="btn btn-sm btn-success"
-                    onclick="openTerimaModal('<?= $r['id'] ?>', '<?= esc($r['nama']) ?>', '<?= $sisa ?>')">
-                    Terima
-                  </button>
-                <?php else: ?>
-                  <button type="button" 
-                                      class="btn btn-xs btn-outline-danger btn-delete"
-                                      data-url="<?= site_url('piutang/delete/' . $r['id']) ?>">
-                                      <i class="fas fa-trash"></i>
-                                    </button>
-                <?php endif; ?>
-              </td>
-            </tr>
-          <?php endforeach; endif; ?>
+            <?php if (empty($list)): ?>
+              <tr>
+                <td colspan="8" class="text-center text-muted">Belum ada data piutang.</td>
+              </tr>
+              <?php else: foreach ($list as $r):
+                $tgl    = $r['tanggal'] ?? '-';
+                $nama   = $r['nama'] ?: ($r['deskripsi'] ?? '-');
+                $akunNm = isset($r['akun_id']) ? ($akunNama[$r['akun_id']] ?? '-') : '-';
+                $jumlah = (float)($r['jumlah'] ?? 0);
+                $diterima = (float)($r['dibayar'] ?? 0);
+                $sisa   = $jumlah - $diterima;
+                $aktif  = ($r['status'] ?? 'belum') !== 'lunas';
+              ?>
+                <tr>
+                  <td><?= esc($tgl) ?></td>
+                  <td><?= esc($nama) ?></td>
+                  <td><?= esc($r['nama_akun'] ?? '-') ?></td>
+                  <td class="text-right">¥<?= number_format($jumlah, 0) ?></td>
+                  <td class="text-right">¥<?= number_format($diterima, 0) ?></td>
+                  <td class="text-right <?= $sisa > 0 ? 'text-danger' : 'text-success' ?>">¥<?= number_format($sisa, 0) ?></td>
+                  <td>
+                    <?php if ($aktif): ?>
+                      <span class="badge badge-warning px-2 py-1">Belum</span>
+                    <?php else: ?>
+                      <span class="badge badge-success px-2 py-1">Lunas</span>
+                    <?php endif; ?>
+                  </td>
+                  <td class="text-right">
+                    <?php if ($aktif): ?>
+                      <button class="btn btn-sm btn-success"
+                        onclick="openTerimaModal('<?= $r['id'] ?>', '<?= esc($r['nama']) ?>', '<?= $sisa ?>')">
+                        Terima
+                      </button>
+                    <?php else: ?>
+                      <button type="button"
+                        class="btn btn-xs btn-outline-danger btn-delete"
+                        data-url="<?= site_url('piutang/delete/' . $r['id']) ?>">
+                        <i class="fas fa-trash"></i>
+                      </button>
+                    <?php endif; ?>
+                  </td>
+                </tr>
+            <?php endforeach;
+            endif; ?>
           </tbody>
         </table>
       </div>
@@ -117,7 +120,7 @@
             <label>Masuk ke Akun</label>
             <select name="akun_id" class="form-control" required>
               <option value="">-- Pilih Akun --</option>
-              <?php foreach($akun as $a): ?>
+              <?php foreach ($akun as $a): ?>
                 <option value="<?= $a['id'] ?>"><?= esc($a['deskripsi']) ?> (Saldo: ¥<?= number_format($a['saldo_terkini'] ?? 0, 0) ?>)</option>
               <?php endforeach; ?>
             </select>
@@ -173,13 +176,13 @@
 </div>
 
 <script>
-function openTerimaModal(id, nama, max) {
-  document.getElementById('piutang_id').value = id;
-  document.getElementById('piutang_nama').value = nama;
-  document.getElementById('piutang_nama_display').value = nama;
-  document.getElementById('jumlah_terima').setAttribute('max', max);
-  $('#modalTerima').modal('show');
-}
+  function openTerimaModal(id, nama, max) {
+    document.getElementById('piutang_id').value = id;
+    document.getElementById('piutang_nama').value = nama;
+    document.getElementById('piutang_nama_display').value = nama;
+    document.getElementById('jumlah_terima').setAttribute('max', max);
+    $('#modalTerima').modal('show');
+  }
 </script>
 
 <?= $this->endSection(); ?>
