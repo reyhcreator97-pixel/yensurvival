@@ -76,21 +76,44 @@ class User extends BaseController
 
         // Total Piutang = sisa semua piutang
         $totalPiutang = 0.0;
-        foreach ($piutangM->where('user_id', $uid)->findAll() as $p) {
+
+        // Ambil semua piutang user sekali, sekalian catat nama yg sudah ada
+        $__piutangList = $piutangM->where('user_id', $uid)->findAll();
+        $__namaPiutangExists = [];
+
+        foreach ($__piutangList as $p) {
             $jumlah  = (float)($p['jumlah']  ?? 0);
             $dibayar = (float)($p['dibayar'] ?? 0);
-            $sisa    = $jumlah - $dibayar;
-            if ($sisa > 0) $totalPiutang += $sisa;
+            $sisa    = max(0, $jumlah - $dibayar);
+
+            // hanya hitung jika masih ada sisa & belum lunas
+            if ($sisa > 0 && (($p['status'] ?? 'belum') !== 'lunas')) {
+                $totalPiutang += $sisa;
+            }
+
+            // simpan nama untuk cegah dobel saat tarik dari kekayaan awal
+            $nm = strtolower(trim($p['nama'] ?? ''));
+            if ($nm !== '') $__namaPiutangExists[$nm] = true;
         }
-        // ✅ Tambahan untuk ambil data piutang dari kekayaan_awal
+
+        // ✅ Tambahan untuk ambil data piutang dari kekayaan_awal (tanpa dobel)
         $piutangAwal = $items->where([
             'user_id'  => $uid,
             'kategori' => 'piutang'
         ])->findAll();
+
         foreach ($piutangAwal as $r) {
+            $nmAwal = strtolower(trim($r['deskripsi'] ?? ''));
+            if ($nmAwal === '') continue;
+
+            // skip kalau sudah ada piutang aktif dengan nama yang sama
+            if (isset($__namaPiutangExists[$nmAwal])) continue;
+
             $jumlah = (float)($r['jumlah'] ?? 0);
-            $sisa   = $jumlah;
-            if ($sisa > 0) $totalPiutang += $sisa;
+            if ($jumlah > 0) {
+                // kekayaan awal belum punya 'dibayar', jadi sisa = jumlah
+                $totalPiutang += $jumlah;
+            }
         }
 
 

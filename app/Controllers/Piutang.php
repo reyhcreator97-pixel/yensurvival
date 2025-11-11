@@ -88,8 +88,16 @@ class Piutang extends BaseController
         }
 
         // --- Hitung total
-        $totalPiutang = array_sum(array_column($final, 'jumlah'));
-        $totalTerima  = array_sum(array_map(fn($r) => (float)($r['dibayar'] ?? 0), $final));
+        $totalPiutang = array_sum(array_map(function ($r) {
+            $j = (float)($r['jumlah']  ?? 0);
+            $d = (float)($r['dibayar'] ?? 0);
+            return max(0, $j - $d); // sisa
+        }, $final));
+
+        $totalTerima = array_sum(array_map(function ($r) {
+            return (float)($r['dibayar'] ?? 0);
+        }, $final));
+
 
         return view('piutang/index', [
             'title'        => 'Piutang',
