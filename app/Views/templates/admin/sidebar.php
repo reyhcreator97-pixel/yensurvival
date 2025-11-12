@@ -75,6 +75,13 @@
                         <span>Settings</span></a>
                 </li>
 
+                <!-- Nav Item - Dashboard -->
+                <li class="nav-item">
+                    <a class="nav-link" href="<?= base_url('admin/development') ?>">
+                        <i class="fas fa-tools"></i>
+                        <span>Development</span></a>
+                </li>
+
                 <!-- Divider -->
                 <hr class="sidebar-divider my-0">
 

@@ -120,6 +120,15 @@ $routes->group('transaksi', ['filter' => 'buyer'], static function ($routes) {
     $routes->post('addAkun',        'Transaksi::addAkun');
 });
 
+// ======================
+// 👤 USER DEVELOPMENT
+// ======================
+$routes->group('user', ['filter' => 'login'], function ($routes) {
+
+    // halaman changelog publik (read-only)
+    $routes->get('development', 'user\Development::index');
+});
+
 
 
 // ===============================
@@ -199,4 +208,14 @@ $routes->group('admin', ['filter' => 'role:Admin'], function ($routes) {
     // 🔹 ADMIN - Log
     // =========================
     $routes->get('logs', 'admin\Logs::index');
+
+    // ======================
+    // 👑 ADMIN DEVELOPMENT
+    // ======================
+    $routes->get('development', 'admin\Development::index');
+    $routes->post('development/store', 'admin\Development::store');
+    $routes->get('development/edit/(:num)', 'admin\Development::edit/$1');
+    $routes->post('development/update/(:num)', 'admin\Development::update/$1');
+    $routes->get('development/delete/(:num)', 'admin\Development::delete/$1');
+    $routes->post('development/save', 'admin\Development::save');
 });

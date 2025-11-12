@@ -143,6 +143,17 @@
 
             <!-- Nav Item - Logout -->
             <li class="nav-item">
+                <a class="nav-link" href="<?= base_url('user/development') ?>">
+                    <i class="fas fa-question-circle"></i>
+                    <span>Development List</span></a>
+            </li>
+
+            <!-- Divider -->
+            <hr class="sidebar-divider my-0">
+
+
+            <!-- Nav Item - Logout -->
+            <li class="nav-item">
                 <a class="nav-link" href="<?= base_url('user/dashboard'); ?>">
                     <i class="fas fa-question-circle"></i>
                     <span>Help</span></a>
