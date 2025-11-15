@@ -31,11 +31,12 @@ $routes->group('', ['filter' => 'optionalLogin'], function ($routes) {
 // 📦 ROUTES UNTUK USER
 // ===============================
 $routes->group('user', ['filter' => 'login'], function ($routes) {
-    $routes->get('index', 'User::index');
-    $routes->get('dashboard', 'User::dashboard');
+    $routes->get('index', 'user::index');
+    $routes->get('dashboard', 'user::dashboard');
     $routes->get('panel', 'user\Panel::index');
     $routes->post('panel/changePassword', 'user\Panel::changePassword');
-    $routes->get('dashboard/chart', 'User\Dashboard::getChartData');
+    $routes->get('dashboard/chart', 'user\Dashboard::getChartData');
+    $routes->get('tutorials', 'user\Tutorial::index');
 });
 
 // ===============================
@@ -124,7 +125,6 @@ $routes->group('transaksi', ['filter' => 'buyer'], static function ($routes) {
 // 👤 USER DEVELOPMENT
 // ======================
 $routes->group('user', ['filter' => 'login'], function ($routes) {
-
     // halaman changelog publik (read-only)
     $routes->get('development', 'user\Development::index');
 });
@@ -210,7 +210,7 @@ $routes->group('admin', ['filter' => 'role:Admin'], function ($routes) {
     $routes->get('logs', 'admin\Logs::index');
 
     // ======================
-    // 👑 ADMIN DEVELOPMENT
+    //  ADMIN DEVELOPMENT
     // ======================
     $routes->get('development', 'admin\Development::index');
     $routes->post('development/store', 'admin\Development::store');
@@ -218,4 +218,12 @@ $routes->group('admin', ['filter' => 'role:Admin'], function ($routes) {
     $routes->post('development/update/(:num)', 'admin\Development::update/$1');
     $routes->get('development/delete/(:num)', 'admin\Development::delete/$1');
     $routes->post('development/save', 'admin\Development::save');
+
+    // ======================
+    //  ADMIN Video Tutorial
+    // ======================
+    $routes->get('tutorials', 'admin\Tutorial::index');
+    $routes->post('tutorials/store', 'admin\Tutorial::store');
+    $routes->post('tutorials/update/(:num)', 'admin\Tutorial::update/$1');
+    $routes->get('tutorials/delete/(:num)', 'admin\Tutorial::delete/$1');
 });

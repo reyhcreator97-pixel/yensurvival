@@ -102,6 +102,26 @@
 
     <!-- Custom scripts for all pages-->
     <script src="<?= base_url(); ?>/js/sb-admin-2.min.js"></script>
+    <script>
+        $(document).ready(function() {
+
+            // Matikan auto-collapse saat resize (<480px)
+            $(window).off("resize");
+
+            // Hapus forced toggle bawaan SB Admin 2
+            // tapi tetap biarkan tombol #sidebarToggle berfungsi normal
+            $(document).off("scroll");
+
+            // Matikan event mousewheel yang bikin sidebar tiba-tiba geser/minimize
+            $('.sidebar').off('mousewheel DOMMouseScroll wheel');
+
+            // Pastikan sidebar tetap stabil di mobile
+            $('body').removeClass('sidebar-toggled');
+            $('.sidebar').removeClass('toggled');
+
+        });
+    </script>
+
 
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>

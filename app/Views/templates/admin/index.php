@@ -3,238 +3,263 @@
 
 <head>
 
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="description" content="">
-    <meta name="author" content="">
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="">
+  <meta name="author" content="">
 
-    <title> <?= $title; ?> </title>
+  <title> <?= $title; ?> </title>
 
-    <!-- Custom fonts for this template-->
-    <link href="<?= base_url(); ?>/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
-    <link
-        href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i"
-        rel="stylesheet">
+  <!-- Custom fonts for this template-->
+  <link href="<?= base_url(); ?>/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
+  <link
+    href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i"
+    rel="stylesheet">
 
-    <!-- Custom styles for this template-->
-    <link href="<?= base_url(); ?>/css/sb-admin-2.min.css" rel="stylesheet">
+  <!-- Custom styles for this template-->
+  <link href="<?= base_url(); ?>/css/sb-admin-2.min.css" rel="stylesheet">
 
-    <style>
-.dataTables_wrapper {
-  overflow: visible !important;
-}
-.table-responsive {
-  overflow: visible !important;
-}
-.dataTables_paginate {
-  z-index: 99999 !important;
-  position: relative !important;
-  pointer-events: auto !important;
-}
-</style>
+  <style>
+    .dataTables_wrapper {
+      overflow: visible !important;
+    }
+
+    .table-responsive {
+      overflow: visible !important;
+    }
+
+    .dataTables_paginate {
+      z-index: 99999 !important;
+      position: relative !important;
+      pointer-events: auto !important;
+    }
+  </style>
 
 </head>
 
 <body id="page-top">
 
-    <!-- Page Wrapper -->
-    <div id="wrapper">
+  <!-- Page Wrapper -->
+  <div id="wrapper">
 
-<!-- Sidebar --> 
-<?= $this->include('templates/admin/sidebar'); ?>
-<!--End Sidebar-->
+    <!-- Sidebar -->
+    <?= $this->include('templates/admin/sidebar'); ?>
+    <!--End Sidebar-->
 
 
-        <!-- Content Wrapper -->
-        <div id="content-wrapper" class="d-flex flex-column">
+    <!-- Content Wrapper -->
+    <div id="content-wrapper" class="d-flex flex-column">
 
-            <!-- Main Content -->
-            <div id="content">
+      <!-- Main Content -->
+      <div id="content">
 
-                <!-- Topbar -->
-             <?= $this->include('templates/admin/topbar'); ?>
-                <!-- End of Topbar -->
+        <!-- Topbar -->
+        <?= $this->include('templates/admin/topbar'); ?>
+        <!-- End of Topbar -->
 
-                <!-- Begin Page Content -->
+        <!-- Begin Page Content -->
 
-<?= $this->renderSection('page-content-admin'); ?>
+        <?= $this->renderSection('page-content-admin'); ?>
 
-                <!-- /.container-fluid -->
-                
+        <!-- /.container-fluid -->
 
-            </div>
-            <!-- End of Main Content -->
 
-            <!-- Footer -->
-            <footer class="sticky-footer bg-white">
-                <div class="container my-auto">
-                    <div class="copyright text-center my-auto">
-                        <span>Copyright &copy; Yen Survival - Rey Creator <?= date('Y'); ?></span>
-                    </div>
-                </div>
-            </footer>
-            <!-- End of Footer -->
+      </div>
+      <!-- End of Main Content -->
 
+      <!-- Footer -->
+      <footer class="sticky-footer bg-white">
+        <div class="container my-auto">
+          <div class="copyright text-center my-auto">
+            <span>Copyright &copy; Yen Survival - Rey Creator <?= date('Y'); ?></span>
+          </div>
         </div>
-        <!-- End of Content Wrapper -->
+      </footer>
+      <!-- End of Footer -->
 
     </div>
-    <!-- End of Page Wrapper -->
+    <!-- End of Content Wrapper -->
 
-    <!-- Scroll to Top Button-->
-    <a class="scroll-to-top rounded" href="#page-top">
-        <i class="fas fa-angle-up"></i>
-    </a>
+  </div>
+  <!-- End of Page Wrapper -->
 
-    <!-- Logout Modal-->
-    <div class="modal fade" id="logoutModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
-        aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLabel">Ready to Leave?</h5>
-                    <button class="close" type="button" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">×</span>
-                    </button>
-                </div>
-                <div class="modal-body">Select "Logout" below if you are ready to end your current session.</div>
-                <div class="modal-footer">
-                    <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancel</button>
-                    <a class="btn btn-primary" href="<?= base_url('logout'); ?>">Logout</a>
-                </div>
-            </div>
+  <!-- Scroll to Top Button-->
+  <a class="scroll-to-top rounded" href="#page-top">
+    <i class="fas fa-angle-up"></i>
+  </a>
+
+  <!-- Logout Modal-->
+  <div class="modal fade" id="logoutModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="exampleModalLabel">Ready to Leave?</h5>
+          <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">×</span>
+          </button>
         </div>
+        <div class="modal-body">Select "Logout" below if you are ready to end your current session.</div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancel</button>
+          <a class="btn btn-primary" href="<?= base_url('logout'); ?>">Logout</a>
+        </div>
+      </div>
     </div>
+  </div>
 
-<!-- Bootstrap core JavaScript -->
-<script src="<?= base_url(); ?>/vendor/jquery/jquery.min.js"></script>
-<script src="<?= base_url(); ?>/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <!-- Bootstrap core JavaScript -->
+  <script src="<?= base_url(); ?>/vendor/jquery/jquery.min.js"></script>
+  <script src="<?= base_url(); ?>/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
 
-<!-- Core plugin JavaScript -->
-<script src="<?= base_url(); ?>/vendor/jquery-easing/jquery.easing.min.js"></script>
+  <!-- Core plugin JavaScript -->
+  <script src="<?= base_url(); ?>/vendor/jquery-easing/jquery.easing.min.js"></script>
 
-<!-- Custom scripts for all pages -->
-<script src="<?= base_url(); ?>/js/sb-admin-2.min.js"></script>
+  <!-- Custom scripts for all pages -->
+  <script src="<?= base_url(); ?>/js/sb-admin-2.min.js"></script>
+  <script>
+    $(document).ready(function() {
 
-<!-- ✅ DataTables Integration -->
-<link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap4.min.css">
-<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap4.min.js"></script>
+      // Matikan auto-collapse saat resize (<480px)
+      $(window).off("resize");
 
-<!-- ✅ FIX DataTables Pagination + Style -->
-<style>
-  /* Pastikan wrapper-nya terbuka, bukan hidden */
-  .table-responsive, .dataTables_wrapper {
-    overflow: visible !important;
-    position: relative !important;
-    z-index: 1;
-  }
+      // Hapus forced toggle bawaan SB Admin 2
+      // tapi tetap biarkan tombol #sidebarToggle berfungsi normal
+      $(document).off("scroll");
 
-  /* Biar pagination muncul dan bisa diklik */
-  .dataTables_paginate {
-    position: relative !important;
-    z-index: 9999 !important;
-    pointer-events: auto !important;
-    background: #fff !important;
-    padding: 10px 0 !important;
-  }
+      // Matikan event mousewheel yang bikin sidebar tiba-tiba geser/minimize
+      $('.sidebar').off('mousewheel DOMMouseScroll wheel');
 
-  /* Style default agar tetap konsisten */
-  .paginate_button {
-    color: #007bff !important;
-    cursor: pointer !important;
-  }
-  .paginate_button.current {
-    background: #007bff !important;
-    color: white !important;
-    border-radius: 4px;
-    padding: 4px 8px;
-  }
-  .paginate_button:hover {
-    background: #e9ecef !important;
-  }
-</style>
+      // Pastikan sidebar tetap stabil di mobile
+      $('body').removeClass('sidebar-toggled');
+      $('.sidebar').removeClass('toggled');
 
-<script>
-$(document).ready(function() {
-  console.log("✅ DataTables version:", $.fn.dataTable.version);
+    });
+  </script>
 
-  $('.datatable').DataTable({
-    pageLength: 10,
-    lengthChange: true,
-    ordering: true,
-    info: true,
-    autoWidth: false,
-    responsive: true,
-    language: {
-      search: "Cari:",
-      lengthMenu: "Tampilkan MENU data per halaman",
-      info: "Menampilkan START - END dari TOTAL data",
-      infoEmpty: "Tidak ada data",
-      zeroRecords: "Tidak ditemukan data yang cocok",
-      paginate: {
-        previous: "← Sebelumnya",
-        next: "Berikutnya →"
-      }
+
+  <!-- ✅ DataTables Integration -->
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap4.min.css">
+  <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+  <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap4.min.js"></script>
+
+  <!-- ✅ FIX DataTables Pagination + Style -->
+  <style>
+    /* Pastikan wrapper-nya terbuka, bukan hidden */
+    .table-responsive,
+    .dataTables_wrapper {
+      overflow: visible !important;
+      position: relative !important;
+      z-index: 1;
     }
-  });
 
-  // Pastikan pagination bisa diklik
-  $('.dataTables_paginate').css('pointer-events', 'auto');
-  $('div.dataTables_paginate a').css('pointer-events', 'auto');
+    /* Biar pagination muncul dan bisa diklik */
+    .dataTables_paginate {
+      position: relative !important;
+      z-index: 9999 !important;
+      pointer-events: auto !important;
+      background: #fff !important;
+      padding: 10px 0 !important;
+    }
 
-  // Kadang SB Admin 2 render ulang DOM -> kasih delay fix
-  setTimeout(() => {
-    $('div.dataTables_paginate').css('pointer-events', 'auto');
-  }, 800);
-});
-</script>
+    /* Style default agar tetap konsisten */
+    .paginate_button {
+      color: #007bff !important;
+      cursor: pointer !important;
+    }
 
-<!-- SweetAlert2-->
-<script src="<?= base_url(); ?>/js/sweetalert2.all.min.js"></script>
+    .paginate_button.current {
+      background: #007bff !important;
+      color: white !important;
+      border-radius: 4px;
+      padding: 4px 8px;
+    }
 
-<!-- SweetAlert2 -->
-<script src="<?= base_url('vendor/sweetalert2/sweetalert2.all.min.js'); ?>"></script>
+    .paginate_button:hover {
+      background: #e9ecef !important;
+    }
+  </style>
 
-<script>
-// ✅ ALERT SUKSES
-<?php if (session()->getFlashdata('message')): ?>
-Swal.fire({
-  icon: 'success',
-  title: 'Berhasil!',
-  html: '<?= (session('message')) ?>',
-  confirmButtonColor: '#3085d6',
-  confirmButtonText: 'Oke',
-  background: '#ffffff',
-});
-<?php endif; ?>
+  <script>
+    $(document).ready(function() {
+      console.log("✅ DataTables version:", $.fn.dataTable.version);
 
-// ❌ ALERT ERROR
-<?php if (session()->getFlashdata('error')): ?>
-Swal.fire({
-  icon: 'error',
-  title: 'Terjadi Kesalahan!',
-  text: '<?= esc(session('error')) ?>',
-  confirmButtonColor: '#d33',
-  confirmButtonText: 'Tutup',
-  background: '#ffffff',
-});
-<?php endif; ?>
+      $('.datatable').DataTable({
+        pageLength: 10,
+        lengthChange: true,
+        ordering: true,
+        info: true,
+        autoWidth: false,
+        responsive: true,
+        language: {
+          search: "Cari:",
+          lengthMenu: "Tampilkan MENU data per halaman",
+          info: "Menampilkan START - END dari TOTAL data",
+          infoEmpty: "Tidak ada data",
+          zeroRecords: "Tidak ditemukan data yang cocok",
+          paginate: {
+            previous: "← Sebelumnya",
+            next: "Berikutnya →"
+          }
+        }
+      });
 
-// ⚠ KONFIRMASI HAPUS
-function confirmDelete(url) {
-  Swal.fire({
-    title: 'Yakin mau hapus?',
-    text: "Data yang sudah dihapus tidak bisa dikembalikan!",
-    icon: 'question',
-    showCancelButton: true,
-    confirmButtonColor: '#d33',
-    cancelButtonColor: '#6c757d',
-    confirmButtonText: 'Ya, hapus!',
-    cancelButtonText: 'Batal',
-    background: '#ffffff'
-  }).then((result) => {
+      // Pastikan pagination bisa diklik
+      $('.dataTables_paginate').css('pointer-events', 'auto');
+      $('div.dataTables_paginate a').css('pointer-events', 'auto');
+
+      // Kadang SB Admin 2 render ulang DOM -> kasih delay fix
+      setTimeout(() => {
+        $('div.dataTables_paginate').css('pointer-events', 'auto');
+      }, 800);
+    });
+  </script>
+
+  <!-- SweetAlert2-->
+  <script src="<?= base_url(); ?>/js/sweetalert2.all.min.js"></script>
+
+  <!-- SweetAlert2 -->
+  <script src="<?= base_url('vendor/sweetalert2/sweetalert2.all.min.js'); ?>"></script>
+
+  <script>
+    // ✅ ALERT SUKSES
+    <?php if (session()->getFlashdata('message')): ?>
+      Swal.fire({
+        icon: 'success',
+        title: 'Berhasil!',
+        html: '<?= (session('message')) ?>',
+        confirmButtonColor: '#3085d6',
+        confirmButtonText: 'Oke',
+        background: '#ffffff',
+      });
+    <?php endif; ?>
+
+    // ❌ ALERT ERROR
+    <?php if (session()->getFlashdata('error')): ?>
+      Swal.fire({
+        icon: 'error',
+        title: 'Terjadi Kesalahan!',
+        text: '<?= esc(session('error')) ?>',
+        confirmButtonColor: '#d33',
+        confirmButtonText: 'Tutup',
+        background: '#ffffff',
+      });
+    <?php endif; ?>
+
+    // ⚠ KONFIRMASI HAPUS
+    function confirmDelete(url) {
+      Swal.fire({
+        title: 'Yakin mau hapus?',
+        text: "Data yang sudah dihapus tidak bisa dikembalikan!",
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Ya, hapus!',
+        cancelButtonText: 'Batal',
+        background: '#ffffff'
+      }).then((result) => {
         if (result.isConfirmed) {
           // Optional: tambahin animasi loading sebelum redirect
           Swal.fire({
@@ -246,85 +271,86 @@ function confirmDelete(url) {
           window.location.href = url;
         }
       });
-}
-
-// 🔄 KONFIRMASI RESET PASSWORD
-function confirmReset(url) {
-  Swal.fire({
-    title: 'Reset Password?',
-    text: "Password user akan direset. Lanjutkan?",
-    icon: 'question',
-    showCancelButton: true,
-    confirmButtonColor: '#17a2b8',
-    cancelButtonColor: '#6c757d',
-    confirmButtonText: 'Ya, reset!',
-    cancelButtonText: 'Batal',
-    background: '#ffffff'
-  }).then((result) => {
-    if (result.isConfirmed) {
-      window.location.href = url;
     }
-  });
-}
 
-// 🚫 KONFIRMASI SUSPEND USER
-function confirmSuspend(url) {
-  Swal.fire({
-    title: 'Suspend User?',
-    text: "User tidak akan bisa login setelah disuspend.",
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonColor: '#d33',
-    cancelButtonColor: '#6c757d',
-    confirmButtonText: 'Ya, suspend!',
-    cancelButtonText: 'Batal',
-    background: '#ffffff'
-  }).then((result) => {
-    if (result.isConfirmed) {
-      window.location.href = url;
+    // 🔄 KONFIRMASI RESET PASSWORD
+    function confirmReset(url) {
+      Swal.fire({
+        title: 'Reset Password?',
+        text: "Password user akan direset. Lanjutkan?",
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#17a2b8',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Ya, reset!',
+        cancelButtonText: 'Batal',
+        background: '#ffffff'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          window.location.href = url;
+        }
+      });
     }
-  });
-}
 
-// ✅ KONFIRMASI AKTIFKAN USER
-function confirmActivate(url) {
-  Swal.fire({
-    title: 'Aktifkan User?',
-    text: "User akan bisa login kembali setelah diaktifkan.",
-    icon: 'question',
-    showCancelButton: true,
-    confirmButtonColor: '#28a745',
-    cancelButtonColor: '#6c757d',
-    confirmButtonText: 'Ya, aktifkan!',
-    cancelButtonText: 'Batal',
-    background: '#ffffff'
-  }).then((result) => {
-    if (result.isConfirmed) {
-      window.location.href = url;
+    // 🚫 KONFIRMASI SUSPEND USER
+    function confirmSuspend(url) {
+      Swal.fire({
+        title: 'Suspend User?',
+        text: "User tidak akan bisa login setelah disuspend.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Ya, suspend!',
+        cancelButtonText: 'Batal',
+        background: '#ffffff'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          window.location.href = url;
+        }
+      });
     }
-  });
-}
 
-// 📉 KONFIRMASI BATALKAN SUBSCRIPTION
-function confirmCancelSub(url) {
-  Swal.fire({
-    title: 'Batalkan Subscription?',
-    text: "User akan kehilangan akses ke fitur premium.",
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonColor: '#d33',
-    cancelButtonColor: '#6c757d',
-    confirmButtonText: 'Ya, batalkan!',
-    cancelButtonText: 'Batal',
-    background: '#ffffff'
-  }).then((result) => {
-    if (result.isConfirmed) {
-      window.location.href = url;
+    // ✅ KONFIRMASI AKTIFKAN USER
+    function confirmActivate(url) {
+      Swal.fire({
+        title: 'Aktifkan User?',
+        text: "User akan bisa login kembali setelah diaktifkan.",
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#28a745',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Ya, aktifkan!',
+        cancelButtonText: 'Batal',
+        background: '#ffffff'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          window.location.href = url;
+        }
+      });
     }
-  });
-}
-</script>
 
-<?= $this->renderSection('scripts'); ?>
+    // 📉 KONFIRMASI BATALKAN SUBSCRIPTION
+    function confirmCancelSub(url) {
+      Swal.fire({
+        title: 'Batalkan Subscription?',
+        text: "User akan kehilangan akses ke fitur premium.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Ya, batalkan!',
+        cancelButtonText: 'Batal',
+        background: '#ffffff'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          window.location.href = url;
+        }
+      });
+    }
+  </script>
+
+  <?= $this->renderSection('scripts'); ?>
 </body>
+
 </html>

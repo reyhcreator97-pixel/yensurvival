@@ -55,6 +55,8 @@ class User extends BaseController
             $totalUang = (float)($rowJumlah->j ?? 0);
         }
 
+
+
         // Total Utang = sisa semua utang
         $totalUtang = 0.0;
 
@@ -142,49 +144,84 @@ class User extends BaseController
         }
 
 
-        //--- Prioritaskan saldo_terkini kalau ada, fallback ke jumlah
-        $rowInv = $items->selectSum('saldo_terkini', 's')
+        // -----------------------------------------------------
+        // : INVESTASI
+        // -----------------------------------------------------
+
+        // --- Ambil total investasi dari kekayaan_awal (skip yang terjual)
+        $investAwalData = $items
             ->where(['user_id' => $uid, 'kategori' => 'investasi'])
-            ->get()->getRow();
+            ->findAll();
 
-        $totalInvestasiAwal = (float)($rowInv->s ?? 0);
+        $totalInvestasiAwal = 0.0;
 
-        if ($totalInvestasiAwal <= 0) {
-            $rowJumlah = $items->selectSum('jumlah', 'j')
-                ->where(['user_id' => $uid, 'kategori' => 'investasi'])
-                ->get()->getRow();
-            $totalInvestasiAwal = (float)($rowJumlah->j ?? 0);
+        foreach ($investAwalData as $r) {
+            $status = (strpos(strtolower($r['deskripsi'] ?? ''), '(terjual)') !== false)
+                ? 'selesai'
+                : 'aktif';
+
+            if ($status !== 'selesai') {
+                $totalInvestasiAwal += (float)($r['saldo_terkini'] ?? $r['jumlah'] ?? 0);
+            }
         }
 
-        //--- setelah itu gabung dengan data investasi dari tabel investasi 
-        $totalInvestasiTransaksi = (float)($investM->where('user_id', $uid)
-            ->selectSum('nilai_sekarang')->first()['nilai_sekarang'] ?? 0);
+        // --- Ambil total investasi dari tabel transaksi investasi (skip yang selesai)
+        $investTransData = $investM
+            ->where('user_id', $uid)
+            ->findAll();
 
+        $totalInvestasiTransaksi = 0.0;
+
+        foreach ($investTransData as $r) {
+            $status = strtolower($r['status'] ?? '');
+            if ($status !== 'selesai' && $status !== 'terjual') {
+                $totalInvestasiTransaksi += (float)($r['nilai_sekarang'] ?? 0);
+            }
+        }
+
+        // --- Total akhir investasi aktif
         $totalInvestasi = $totalInvestasiAwal + $totalInvestasiTransaksi;
+
 
 
         // -----------------------------------------------------
         // : ASET
         // -----------------------------------------------------
 
-        $rowInv = $items->selectSum('saldo_terkini', 's')
+        // --- Ambil semua data aset dari kekayaan_awal
+        $asetAwalData = $items
             ->where(['user_id' => $uid, 'kategori' => 'aset'])
-            ->get()->getRow();
+            ->findAll();
 
-        $totalAsetAwal = (float)($rowInv->s ?? 0);
+        $totalAsetAwal = 0.0;
 
-        if ($totalAsetAwal <= 0) {
-            $rowJumlah = $items->selectSum('jumlah', 'j')
-                ->where(['user_id' => $uid, 'kategori' => 'aset'])
-                ->get()->getRow();
-            $totalAsetAwal = (float)($rowJumlah->j ?? 0);
+        foreach ($asetAwalData as $r) {
+            $status = (strpos(strtolower($r['deskripsi'] ?? ''), '(terjual)') !== false)
+                ? 'terjual'
+                : 'aktif';
+
+            if ($status !== 'terjual' && $status !== 'selesai') {
+                $totalAsetAwal += (float)($r['saldo_terkini'] ?? $r['jumlah'] ?? 0);
+            }
         }
 
-        //--- setelah itu gabung dengan data investasi dari tabel investasi 
-        $totalAsetTransaksi = (float)($asetM->where('user_id', $uid)
-            ->selectSum('nilai_sekarang')->first()['nilai_sekarang'] ?? 0);
+        // --- Ambil semua data aset dari tabel aset
+        $asetTransData = $asetM
+            ->where('user_id', $uid)
+            ->findAll();
 
+        $totalAsetTransaksi = 0.0;
+
+        foreach ($asetTransData as $r) {
+            $status = strtolower($r['status'] ?? '');
+            if ($status !== 'terjual' && $status !== 'selesai') {
+                $totalAsetTransaksi += (float)($r['nilai_sekarang'] ?? 0);
+            }
+        }
+
+        // --- Total akhir aset aktif
         $totalAset = $totalAsetAwal + $totalAsetTransaksi;
+
 
         // --- Konversi ke IDR ---
         $totalUangIdr      = $kurs > 0 ? $totalUang * $kurs : 0;

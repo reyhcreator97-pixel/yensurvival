@@ -144,7 +144,7 @@
             <!-- Nav Item - Logout -->
             <li class="nav-item">
                 <a class="nav-link" href="<?= base_url('user/development') ?>">
-                    <i class="fas fa-question-circle"></i>
+                    <i class="fas fa-laptop-code"></i>
                     <span>Development List</span></a>
             </li>
 
@@ -154,7 +154,7 @@
 
             <!-- Nav Item - Logout -->
             <li class="nav-item">
-                <a class="nav-link" href="<?= base_url('user/dashboard'); ?>">
+                <a class="nav-link" href="<?= base_url('user/tutorials'); ?>">
                     <i class="fas fa-question-circle"></i>
                     <span>Help</span></a>
             </li>

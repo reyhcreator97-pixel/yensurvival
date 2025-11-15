@@ -65,6 +65,17 @@
                         <i class="fas fa-ticket-alt"></i>
                         <span>Set Kupon</span></a>
                 </li>
+
+                <!-- Divider -->
+                <hr class="sidebar-divider my-0">
+
+                <!-- Nav Item - Dashboard -->
+                <li class="nav-item">
+                    <a class="nav-link" href="<?= base_url('admin/tutorials'); ?>">
+                        <i class="fab fa-youtube"></i>
+                        <span>Set Video Tutorial</span></a>
+                </li>
+
                 <!-- Divider -->
                 <hr class="sidebar-divider my-0">
 
@@ -78,7 +89,7 @@
                 <!-- Nav Item - Dashboard -->
                 <li class="nav-item">
                     <a class="nav-link" href="<?= base_url('admin/development') ?>">
-                        <i class="fas fa-tools"></i>
+                        <i class="fas fa-laptop-code"></i>
                         <span>Development</span></a>
                 </li>
 
