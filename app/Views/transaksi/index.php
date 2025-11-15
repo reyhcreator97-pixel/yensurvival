@@ -14,8 +14,8 @@
         <i class="fas fa-exchange-alt fa-sm text-white-50"></i> Pindah Dana
       </button>
       <button class="btn btn-info" data-toggle="modal" data-target="#modalDetailAkun">
-  <i class="fas fa-wallet fa-sm text-white-50"></i> Detail Akun
-</button>
+        <i class="fas fa-wallet fa-sm text-white-50"></i> Detail Akun
+      </button>
 
     </div>
   </div>
@@ -26,14 +26,14 @@
       <form class="form-inline">
         <label class="mr-2">Filter:</label>
         <select name="mode" class="form-control mr-2" onchange="toggleFilter(this.value)">
-          <option value="daily"   <?= $mode==='daily'?'selected':''; ?>>Harian</option>
-          <option value="monthly" <?= $mode==='monthly'?'selected':''; ?>>Bulanan</option>
-          <option value="yearly"  <?= $mode==='yearly'?'selected':''; ?>>Tahunan</option>
+          <option value="daily" <?= $mode === 'daily' ? 'selected' : ''; ?>>Harian</option>
+          <option value="monthly" <?= $mode === 'monthly' ? 'selected' : ''; ?>>Bulanan</option>
+          <option value="yearly" <?= $mode === 'yearly' ? 'selected' : ''; ?>>Tahunan</option>
         </select>
 
-        <input type="date" name="date"  id="flt-date"  class="form-control mr-2" value="<?= esc($date) ?>"  <?= $mode!=='daily'?'style="display:none"':''; ?>>
-        <input type="month" name="month" id="flt-month" class="form-control mr-2" value="<?= esc($month) ?>" <?= $mode!=='monthly'?'style="display:none"':''; ?>>
-        <input type="number" min="2000" max="2100" name="year" id="flt-year" class="form-control mr-2" value="<?= esc($year) ?>" placeholder="YYYY" <?= $mode!=='yearly'?'style="display:none"':''; ?>>
+        <input type="date" name="date" id="flt-date" class="form-control mr-2" value="<?= esc($date) ?>" <?= $mode !== 'daily' ? 'style="display:none"' : ''; ?>>
+        <input type="month" name="month" id="flt-month" class="form-control mr-2" value="<?= esc($month) ?>" <?= $mode !== 'monthly' ? 'style="display:none"' : ''; ?>>
+        <input type="number" min="2000" max="2100" name="year" id="flt-year" class="form-control mr-2" value="<?= esc($year) ?>" placeholder="YYYY" <?= $mode !== 'yearly' ? 'style="display:none"' : ''; ?>>
 
         <button class="btn btn-secondary">Terapkan</button>
       </form>
@@ -46,7 +46,7 @@
       <div class="card border-left-success shadow h-100 py-2">
         <div class="card-body">
           <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Total Pemasukan</div>
-          <div class="h5 mb-0 font-weight-bold text-gray-800">¥<?= number_format($totalIn,0) ?></div>
+          <div class="h5 mb-0 font-weight-bold text-gray-800">¥<?= number_format($totalIn, 0) ?></div>
         </div>
       </div>
     </div>
@@ -54,7 +54,7 @@
       <div class="card border-left-danger shadow h-100 py-2">
         <div class="card-body">
           <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">Total Pengeluaran</div>
-          <div class="h5 mb-0 font-weight-bold text-gray-800">¥<?= number_format($totalOut,0) ?></div>
+          <div class="h5 mb-0 font-weight-bold text-gray-800">¥<?= number_format($totalOut, 0) ?></div>
         </div>
       </div>
     </div>
@@ -62,7 +62,7 @@
       <div class="card border-left-info shadow h-100 py-2">
         <div class="card-body">
           <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Saldo (In - Out)</div>
-          <div class="h5 mb-0 font-weight-bold text-gray-800">¥<?= number_format($saldo,0) ?></div>
+          <div class="h5 mb-0 font-weight-bold text-gray-800">¥<?= number_format($saldo, 0) ?></div>
         </div>
       </div>
     </div>
@@ -91,41 +91,46 @@
             <?php
             // helper nama akun
             $akunById = [];
-            foreach ($akun as $a) { $akunById[$a['id']] = $a['deskripsi']; }
+            foreach ($akun as $a) {
+              $akunById[$a['id']] = $a['deskripsi'];
+            }
             ?>
-            <?php if(empty($list)): ?>
-              <tr><td colspan="7" class="text-center text-muted">Belum ada transaksi.</td></tr>
-            <?php else: foreach ($list as $r): ?>
+            <?php if (empty($list)): ?>
               <tr>
-                <td><?= esc($r['tanggal']) ?></td>
-                <td>
-                  <?php if($r['jenis']==='in'): ?>
-                    <span class="badge badge-success">Masuk</span>
-                  <?php elseif($r['jenis']==='out'): ?>
-                    <span class="badge badge-danger">Keluar</span>
-                  <?php else: ?>
-                    <span class="badge badge-primary">Transfer</span>
-                  <?php endif; ?>
-                </td>
-                <td>
-                  <?= esc($akunById[$r['sumber_id']] ?? '-') ?>
-                  <?php if($r['tujuan_id']): ?>
-                    <i class="fas fa-arrow-right mx-1"></i>
-                    <?= esc($akunById[$r['tujuan_id']] ?? '-') ?>
-                  <?php endif; ?>
-                </td>
-                <td><?= esc($r['kategori'] ?? '-') ?></td>
-                <td><?= esc($r['deskripsi'] ?? '-') ?></td>
-                <td class="text-right">¥<?= number_format($r['jumlah'],0) ?></td>
-                <td class="text-right">
-  <button type="button" 
-          class="btn btn-xs btn-outline-danger btn-delete"
-          data-url="<?= site_url('transaksi/delete/' . $r['id']) ?>">
-    <i class="fas fa-trash"></i>
-  </button>
-</td>
+                <td colspan="7" class="text-center text-muted">Belum ada transaksi.</td>
               </tr>
-            <?php endforeach; endif; ?>
+              <?php else: foreach ($list as $r): ?>
+                <tr>
+                  <td><?= esc($r['tanggal']) ?></td>
+                  <td>
+                    <?php if ($r['jenis'] === 'in'): ?>
+                      <span class="badge badge-success">Masuk</span>
+                    <?php elseif ($r['jenis'] === 'out'): ?>
+                      <span class="badge badge-danger">Keluar</span>
+                    <?php else: ?>
+                      <span class="badge badge-primary">Transfer</span>
+                    <?php endif; ?>
+                  </td>
+                  <td>
+                    <?= esc($akunById[$r['sumber_id']] ?? '-') ?>
+                    <?php if ($r['tujuan_id']): ?>
+                      <i class="fas fa-arrow-right mx-1"></i>
+                      <?= esc($akunById[$r['tujuan_id']] ?? '-') ?>
+                    <?php endif; ?>
+                  </td>
+                  <td><?= esc($r['kategori'] ?? '-') ?></td>
+                  <td><?= esc($r['deskripsi'] ?? '-') ?></td>
+                  <td class="text-right">¥<?= number_format($r['jumlah'], 0) ?></td>
+                  <td class="text-right">
+                    <button type="button"
+                      class="btn btn-xs btn-outline-danger btn-delete"
+                      data-url="<?= site_url('transaksi/delete/' . $r['id']) ?>">
+                      <i class="fas fa-trash"></i>
+                    </button>
+                  </td>
+                </tr>
+            <?php endforeach;
+            endif; ?>
           </tbody>
         </table>
       </div>
@@ -159,7 +164,7 @@
           <label>Sumber Dana</label>
           <select name="sumber_id" class="form-control" required>
             <option value="">- pilih -</option>
-            <?php foreach($akun as $a): ?>
+            <?php foreach ($akun as $a): ?>
               <option value="<?= $a['id'] ?>"><?= esc($a['deskripsi']) ?></option>
             <?php endforeach; ?>
           </select>
@@ -202,7 +207,7 @@
           <label>Dari Akun</label>
           <select name="from_id" class="form-control" required>
             <option value="">- pilih -</option>
-            <?php foreach($akun as $a): ?>
+            <?php foreach ($akun as $a): ?>
               <option value="<?= $a['id'] ?>"><?= esc($a['deskripsi']) ?></option>
             <?php endforeach; ?>
           </select>
@@ -211,7 +216,7 @@
           <label>Ke Akun</label>
           <select name="to_id" class="form-control" required>
             <option value="">- pilih -</option>
-            <?php foreach($akun as $a): ?>
+            <?php foreach ($akun as $a): ?>
               <option value="<?= $a['id'] ?>"><?= esc($a['deskripsi']) ?></option>
             <?php endforeach; ?>
           </select>
@@ -219,6 +224,10 @@
         <div class="form-group">
           <label>Jumlah (¥)</label>
           <input type="number" step="0.01" min="0" name="jumlah" class="form-control" required>
+        </div>
+        <div class="form-group">
+          <label>Biaya Admin (Opsional)</label>
+          <input type="number" name="biaya_admin" class="form-control" min="0" placeholder="0">
         </div>
         <div class="form-group">
           <label>Kategori/Tag (opsional)</label>
@@ -254,10 +263,10 @@
             foreach ($akunList as $a):
               $saldo = $a['saldo_terkini'] ?? $a['jumlah'];
             ?>
-            <tr>
-              <td><?= esc($a['deskripsi']) ?></td>
-              <td class="text-right font-weight-bold">¥<?= number_format($saldo, 0) ?></td>
-            </tr>
+              <tr>
+                <td><?= esc($a['deskripsi']) ?></td>
+                <td class="text-right font-weight-bold">¥<?= number_format($saldo, 0) ?></td>
+              </tr>
             <?php endforeach; ?>
           </tbody>
         </table>
@@ -296,15 +305,19 @@
   </div>
 </div>
 
+<div class="d-flex justify-content-center mt-3">
+  <?= $pager->links('trx', 'bootstrap_full') ?>
+</div>
+
 
 <?= $this->endSection(); ?>
 
 <?= $this->section('scripts'); ?>
 <script>
-function toggleFilter(mode){
-  document.getElementById('flt-date').style.display  = (mode==='daily')   ? '' : 'none';
-  document.getElementById('flt-month').style.display = (mode==='monthly') ? '' : 'none';
-  document.getElementById('flt-year').style.display  = (mode==='yearly')  ? '' : 'none';
-}
+  function toggleFilter(mode) {
+    document.getElementById('flt-date').style.display = (mode === 'daily') ? '' : 'none';
+    document.getElementById('flt-month').style.display = (mode === 'monthly') ? '' : 'none';
+    document.getElementById('flt-year').style.display = (mode === 'yearly') ? '' : 'none';
+  }
 </script>
 <?= $this->endSection(); ?>
