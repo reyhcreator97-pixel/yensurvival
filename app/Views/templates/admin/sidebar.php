@@ -61,36 +61,44 @@
 
                 <!-- Nav Item - Dashboard -->
                 <li class="nav-item">
-                    <a class="nav-link" href="<?= base_url('admin/coupons'); ?>">
-                        <i class="fas fa-ticket-alt"></i>
-                        <span>Set Kupon</span></a>
-                </li>
-
-                <!-- Divider -->
-                <hr class="sidebar-divider my-0">
-
-                <!-- Nav Item - Dashboard -->
-                <li class="nav-item">
                     <a class="nav-link" href="<?= base_url('admin/tutorials'); ?>">
                         <i class="fab fa-youtube"></i>
                         <span>Set Video Tutorial</span></a>
                 </li>
 
                 <!-- Divider -->
-                <hr class="sidebar-divider my-0">
+                <hr class="sidebar-divider">
 
-                <!-- Nav Item - Dashboard -->
+                <div class="sidebar-heading">
+                    All Settings
+                </div>
+
+                <!-- Nav Item - Setting -->
                 <li class="nav-item">
                     <a class="nav-link" href="<?= base_url('admin/settings'); ?>">
                         <i class="fas fa-tools"></i>
                         <span>Settings</span></a>
                 </li>
 
-                <!-- Nav Item - Dashboard -->
+                <!-- Nav Item - Development -->
                 <li class="nav-item">
                     <a class="nav-link" href="<?= base_url('admin/development') ?>">
                         <i class="fas fa-laptop-code"></i>
                         <span>Development</span></a>
+                </li>
+
+                <!-- Nav Item - Kupon -->
+                <li class="nav-item">
+                    <a class="nav-link" href="<?= base_url('admin/coupons'); ?>">
+                        <i class="fas fa-ticket-alt"></i>
+                        <span>Set Kupon</span></a>
+                </li>
+
+                <!-- Nav Item - Kategori Transaksi -->
+                <li class="nav-item">
+                    <a class="nav-link" href="<?= base_url('admin/kategori-transaksi'); ?>">
+                        <i class="fas fa-list-alt"></i>
+                        <span>Kategori Transaksi</span></a>
                 </li>
 
                 <!-- Divider -->

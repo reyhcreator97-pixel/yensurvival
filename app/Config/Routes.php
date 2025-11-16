@@ -226,4 +226,13 @@ $routes->group('admin', ['filter' => 'role:Admin'], function ($routes) {
     $routes->post('tutorials/store', 'admin\Tutorial::store');
     $routes->post('tutorials/update/(:num)', 'admin\Tutorial::update/$1');
     $routes->get('tutorials/delete/(:num)', 'admin\Tutorial::delete/$1');
+
+    // ======================
+    //  ADMIN Kategori Transaksi
+    // ======================
+
+    $routes->get('kategori-transaksi', 'admin\TransactionCategory::index');
+    $routes->post('kategori-transaksi/save', 'admin\TransactionCategory::save');
+    $routes->post('kategori-transaksi/update/(:num)', 'admin\TransactionCategory::update/$1');
+    $routes->get('kategori-transaksi/delete/(:num)', 'admin\TransactionCategory::delete/$1');
 });

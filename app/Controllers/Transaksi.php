@@ -25,6 +25,9 @@ class Transaksi extends BaseController
     {
         $uid = $this->uid();
 
+        $catModel = new \App\Models\TransactionCategoryModel();
+        $kategoriList = $catModel->orderBy('type', 'ASC')->findAll();
+
         // === Filter: daily / monthly / yearly ===
         $mode  = $this->request->getGet('mode')  ?? 'daily';
         $date  = $this->request->getGet('date')  ?? date('Y-m-d');
@@ -94,6 +97,11 @@ class Transaksi extends BaseController
             'kategori' => 'uang'
         ])->orderBy('id', 'ASC')->findAll();
 
+        $iconMap = [];
+        foreach ($kategoriList as $k) {
+            $iconMap[$k['name']] = $k['icon'];
+        }
+
         return view('transaksi/index', [
             'title'     => 'Transaksi',
             'mode'      => $mode,
@@ -106,6 +114,9 @@ class Transaksi extends BaseController
             'totalOut'  => $totalOut,
             'saldo'     => $saldo,
             'akun'      => $akun,
+            'kategoriList' => $kategoriList,
+            'iconMap'   => $iconMap,
+
         ]);
     }
 

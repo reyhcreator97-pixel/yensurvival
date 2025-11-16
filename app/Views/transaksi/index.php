@@ -118,7 +118,12 @@
                       <?= esc($akunById[$r['tujuan_id']] ?? '-') ?>
                     <?php endif; ?>
                   </td>
-                  <td><?= esc($r['kategori'] ?? '-') ?></td>
+                  <td>
+                    <?php if (!empty($iconMap[$r['kategori']])): ?>
+                      <i class="<?= esc($iconMap[$r['kategori']]) ?> text-primary mr-1"></i>
+                    <?php endif; ?>
+                    <?= esc($r['kategori'] ?? '-') ?>
+                  </td>
                   <td><?= esc($r['deskripsi'] ?? '-') ?></td>
                   <td class="text-right">¥<?= number_format($r['jumlah'], 0) ?></td>
                   <td class="text-right">
@@ -171,8 +176,17 @@
         </div>
         <div class="form-group">
           <label>Kategori</label>
-          <input type="text" name="kategori" class="form-control" placeholder="Gaji / Makan / Transport ...">
+          <select name="kategori" class="form-control" required>
+            <option value="">- pilih kategori -</option>
+            <?php foreach ($kategoriList as $k): ?>
+              <option value="<?= esc($k['name']) ?>">
+                <?= esc($k['name']) ?>
+              </option>
+            <?php endforeach; ?>
+          </select>
+          <small class="text-muted">Kategori otomatis sesuai sistem</small>
         </div>
+
         <div class="form-group">
           <label>Deskripsi</label>
           <input type="text" name="deskripsi" class="form-control" placeholder="keterangan (opsional)">
