@@ -176,11 +176,12 @@
         </div>
         <div class="form-group">
           <label>Kategori</label>
-          <select name="kategori" class="form-control" required>
+          <select name="kategori" id="kategoriSelect" class="form-control" required>
             <option value="">- pilih kategori -</option>
-            <?php foreach ($kategoriList as $k): ?>
-              <option value="<?= esc($k['name']) ?>">
-                <?= esc($k['name']) ?>
+
+            <?php foreach ($categories as $c): ?>
+              <option value="<?= esc($c['name']) ?>" data-type="<?= esc($c['type']) ?>">
+                <?= esc($c['name']) ?>
               </option>
             <?php endforeach; ?>
           </select>
@@ -333,5 +334,32 @@
     document.getElementById('flt-month').style.display = (mode === 'monthly') ? '' : 'none';
     document.getElementById('flt-year').style.display = (mode === 'yearly') ? '' : 'none';
   }
+</script>
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+
+    const jenisSelect = document.querySelector("select[name='jenis']");
+    const kategoriSelect = document.getElementById("kategoriSelect");
+
+    function filterKategori() {
+      const jenis = jenisSelect.value; // in / out
+
+      [...kategoriSelect.options].forEach(opt => {
+        if (opt.value === "") return; // skip placeholder
+
+        const type = opt.getAttribute("data-type");
+
+        // cocokkan tipe kategori dengan jenis transaksi
+        opt.style.display = (type === jenis) ? "block" : "none";
+      });
+
+      kategoriSelect.value = ""; // reset pilihan setiap ganti jenis
+    }
+
+    // on load & on change
+    filterKategori();
+    jenisSelect.addEventListener("change", filterKategori);
+
+  });
 </script>
 <?= $this->endSection(); ?>

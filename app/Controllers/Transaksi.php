@@ -102,6 +102,10 @@ class Transaksi extends BaseController
             $iconMap[$k['name']] = $k['icon'];
         }
 
+        $categories = model('TransactionCategoryModel')
+            ->orderBy('name', 'ASC')
+            ->findAll();
+
         return view('transaksi/index', [
             'title'     => 'Transaksi',
             'mode'      => $mode,
@@ -116,6 +120,7 @@ class Transaksi extends BaseController
             'akun'      => $akun,
             'kategoriList' => $kategoriList,
             'iconMap'   => $iconMap,
+            'categories' => $categories,
 
         ]);
     }
